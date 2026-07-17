@@ -1,331 +1,207 @@
 # AGENTS.md
 
-# Engineering Assessment Framework (EAF)
+# AI Contributor Guide
 
-This repository contains the Engineering Assessment Framework (EAF), a vendor-neutral framework for reviewing software systems, assessing engineering maturity, supporting executive decision-making, and certifying production readiness.
+This document defines how AI assistants should contribute to the Engineering Assessment Framework (EAF).
 
-This document defines how AI assistants must contribute to the project.
-
-These instructions are mandatory.
+The goal is to ensure that every contribution is consistent, predictable, and aligned with the architecture and philosophy of the framework.
 
 ---
 
-# Your Role
+# Before You Start
 
-You are not creating documentation.
+Always read the following documents before making any contribution:
 
-You are contributing to an engineering framework.
+1. `PROJECT.md`
+2. `ENGINEERING-ASSESSMENT-FRAMEWORK.md`
+3. `ENGINEERING-GUIDELINES.md`
+4. `AUTHORING-STANDARDS.md`
+5. `TASKS.md`
 
-Every modification must preserve the architecture, philosophy, and consistency of the framework.
-
-Never optimize for speed.
-
-Always optimize for consistency.
-
----
-
-# Before Writing Anything
-
-Before creating or modifying any document you MUST understand the framework.
-
-Read the following documents in this exact order.
-
-1. framework/ENGINEERING-ASSESSMENT-FRAMEWORK.md
-2. framework/ENGINEERING-GUIDELINES.md
-3. framework/AUTHORING-STANDARDS.md
-
-Only after understanding those documents should you continue.
+These documents define the project's vision, architecture, writing standards, engineering principles, and current implementation status.
 
 ---
 
-# Then Read
+# Core Responsibilities
 
-If writing a Review
+AI contributors are expected to:
 
-Read previous Reviews.
-
-If writing a Scorecard
-
-Read:
-
-The corresponding Review.
-
-Existing Scorecards.
-
-If writing an Assessment
-
-Read:
-
-All referenced Scorecards.
-
-If writing a Certification
-
-Read:
-
-The corresponding Assessment.
-
-Never skip previous layers.
+- Preserve the architecture of the framework.
+- Maintain consistent terminology.
+- Respect the responsibility of every artifact.
+- Produce publication-ready documentation.
+- Build incrementally on existing work.
+- Keep the framework vendor neutral.
+- Keep the framework technology agnostic.
+- Avoid duplication across artifacts.
 
 ---
 
-# Framework Architecture
+# Artifact Responsibilities
 
-The framework always follows this lifecycle.
+Each artifact has a single responsibility.
 
-Software System
-
-↓
-
-Reviews
-
-↓
-
-Scorecards
-
-↓
-
-Assessments
-
-↓
-
-Certifications
-
-Every artifact consumes outputs from previous layers.
-
-No artifact performs work already completed.
-
----
-
-# Responsibilities
-
-Reviews
+## Reviews
 
 Produce engineering evidence.
 
-Scorecards
+Answer:
 
-Summarize engineering evidence.
-
-Assessments
-
-Transform evidence into executive decisions.
-
-Certifications
-
-Formalize executive decisions.
-
-These responsibilities must never overlap.
+> What did we find?
 
 ---
 
-# Never Do These Things
+## Scorecards
 
-Never invent a new document structure.
+Summarize engineering capabilities.
 
-Never rename canonical sections.
+Answer:
 
-Never duplicate information.
-
-Never introduce vendor bias.
-
-Never introduce technology bias.
-
-Never change terminology.
-
-Never change numbering conventions.
-
-Never remove Future Enhancements.
-
-Never merge responsibilities.
+> How healthy is this engineering domain?
 
 ---
 
-# Canonical Vocabulary
+## Assessments
 
-Always use these terms.
+Transform engineering evidence into executive decisions.
 
-Engineering Domain
+Answer:
 
-Engineering Capability
-
-Evidence
-
-Finding
-
-Recommendation
-
-Risk
-
-Assessment
-
-Certification
-
-Avoid synonyms.
-
-Consistency is more important than variety.
+> What decision should be made?
 
 ---
 
-# Writing Style
+## Certifications
 
-Write like an experienced software architect.
+Formally recognize that predefined engineering criteria have been satisfied.
 
-Be objective.
+Answer:
 
-Be concise.
-
-Be professional.
-
-Avoid marketing language.
-
-Avoid emotional language.
-
-Avoid subjective opinions.
-
-Use engineering language.
+> Has the organization approved this outcome?
 
 ---
 
-# Reviews
+## Playbooks
 
-Reviews answer
+Provide repeatable implementation guidance.
 
-"What did we find?"
+Answer:
 
-Reviews never score.
-
-Reviews never certify.
-
-Reviews never make executive decisions.
+> How should this process be executed?
 
 ---
 
-# Scorecards
+# General Rules
 
-Scorecards answer
+Always:
 
-"How healthy is this engineering domain?"
+- Preserve existing document structures.
+- Follow repository naming conventions.
+- Reuse existing terminology.
+- Maintain writing consistency.
+- Keep documents concise and professional.
+- Write for engineering audiences.
 
-Scorecards summarize.
+Never:
 
-Scorecards never inspect systems.
-
----
-
-# Assessments
-
-Assessments answer
-
-"What decision should be made?"
-
-Assessments never inspect systems.
-
-Assessments never calculate maturity.
-
-Assessments always finish with a decision.
+- Invent new framework concepts.
+- Rename established sections.
+- Merge responsibilities between artifacts.
+- Duplicate information already documented elsewhere.
+- Introduce vendor-specific recommendations unless explicitly requested.
 
 ---
 
-# Certifications
+# Autonomous Workflow
 
-Certifications answer
+The Engineering Assessment Framework is designed to be developed incrementally.
 
-"Has the organization formally approved this?"
+AI contributors should work autonomously by following the workflow below rather than waiting for confirmation after every completed document.
 
-Certifications are declarations.
+## Execution Workflow
 
-Not analyses.
+For every task:
 
----
-
-# Every Recommendation Must
-
-Be actionable.
-
-Be measurable.
-
-Be evidence-driven.
-
-Be realistic.
-
-Support engineering improvement.
+1. Read `PROJECT.md` to understand the purpose of the framework.
+2. Read `TASKS.md` and identify the **Current Task**.
+3. Review the required dependencies listed for the task.
+4. Analyze existing framework artifacts before creating new ones.
+5. Produce the requested artifact.
+6. Validate the artifact against the framework standards.
+7. Update `TASKS.md` by marking the completed task.
+8. Move the next pending task into **Current Task**.
+9. Continue working until the current milestone is completed.
 
 ---
 
-# Every Finding Must
+# Dependency Rules
 
-Describe reality.
+The framework follows a strict dependency chain.
 
-Be objective.
+```
+Software System
+        ↓
+Engineering Reviews
+        ↓
+Engineering Scorecards
+        ↓
+Executive Assessments
+        ↓
+Engineering Certifications
+        ↓
+Engineering Governance
+```
 
-Be verifiable.
+Every artifact consumes information produced by the previous stage.
 
-Avoid assumptions.
+For example:
 
----
+- Reviews produce engineering findings.
+- Scorecards summarize Review evidence.
+- Assessments consume Scorecards to support executive decisions.
+- Certifications formalize completed Assessments.
 
-# Every Assessment Must
-
-Contain an executive question.
-
-Contain a final decision.
-
-Explain why that decision was reached.
-
-Identify remaining risks.
-
-Identify outstanding actions.
-
----
-
-# Every Certification Must
-
-Reference the corresponding Assessment.
-
-Declare certification status.
-
-Declare certification scope.
-
-Declare validity.
-
-Never analyze.
+Never generate conclusions without supporting evidence from previous artifacts.
 
 ---
 
-# Repository Philosophy
+# Validation Checklist
 
-This repository values:
+Before marking any task as complete, verify that:
 
-Consistency over creativity.
-
-Engineering over marketing.
-
-Evidence over opinion.
-
-Decisions over observations.
-
-Traceability over assumptions.
+- The document follows the standard structure.
+- Responsibilities are respected.
+- Existing terminology is preserved.
+- No information is duplicated.
+- Dependencies have been correctly consumed.
+- The document is internally consistent.
+- The document is publication-ready.
 
 ---
 
-# If You Are Unsure
+# Stop Conditions
 
-Do not invent.
+Only stop working when:
 
-Look at existing artifacts.
+- Required information is missing.
+- A framework-level architectural decision is required.
+- Human input is explicitly necessary.
+- The current milestone has been completed.
 
-Maintain consistency.
-
-Follow the framework.
-
-When in doubt, preserve the architecture instead of creating something new.
+Otherwise, continue executing the next task automatically.
 
 ---
 
-# Goal
+# Definition of Success
 
-Your objective is not to write documentation.
+A successful contribution:
 
-Your objective is to expand the Engineering Assessment Framework without changing its philosophy, architecture, or engineering standards.
+- Strengthens the Engineering Assessment Framework.
+- Preserves consistency across the repository.
+- Respects the responsibility of every artifact.
+- Builds upon existing work instead of replacing it.
+- Produces documentation that is immediately publishable.
 
-Every contribution should feel as if it had been written by the original framework authors.
+The objective is not to generate isolated Markdown documents.
+
+The objective is to incrementally build a complete, coherent, and maintainable Engineering Assessment Framework that can be used by engineering teams and executive leadership to evaluate software systems consistently.
