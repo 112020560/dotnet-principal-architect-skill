@@ -1,19 +1,27 @@
 # Principal .NET Architect Skill
 
-An Engineering Assessment Framework (EAF) that installs a Principal .NET Architect role into your AI coding assistant. The assistant evaluates architecture, performance, security, and operational readiness — it does not generate or rewrite application code.
+An Engineering Assessment Framework (EAF) that installs a Principal .NET Architect role into your AI coding assistant. The assistant works in two modes: it **reviews** existing architecture, performance, security, and operational readiness, and it **builds** new .NET code that already complies with the same engineering standard.
 
 ---
 
 ## What it does
 
-Once installed in a project, your AI assistant operates as a Principal .NET Architect. It:
+Once installed in a project, your AI assistant operates as a Principal .NET Architect, in one of two modes:
+
+**Review Mode** — evaluates code that already exists:
 
 - Reviews code and identifies findings with severity, evidence, and business impact
 - Produces engineering scorecards by capability domain (Architecture, Security, Performance, etc.)
 - Issues formal production readiness decisions: GO, GO WITH CONDITIONS, or NO GO
 - Answers architectural questions with trade-offs, not dogma
 
-All findings reference permanent rule identifiers from the EAF Rule Catalog (e.g., `ARCH-003`, `PERF-004`, `SEC-007`). Rules are never invented.
+**Build Mode** — writes new code so it complies from the start:
+
+- Applies the same EAF rules while implementing endpoints, services, consumers, repositories, etc.
+- Self-checks the generated code against the same pattern checklist used in Review Mode (sync-over-async, missing `CancellationToken`, unbounded `HttpClient`, hardcoded secrets, unparameterized queries, and more) before returning it
+- Annotates only the non-obvious decisions with a rule ID, instead of producing a full findings report
+
+All findings and build decisions reference permanent rule identifiers from the EAF Rule Catalog (e.g., `ARCH-003`, `PERF-004`, `SEC-007`). Rules are never invented.
 
 ---
 
@@ -49,7 +57,11 @@ Safe to run multiple times — idempotent.
 
 ## How to use it
 
-After installing, open the project in your AI assistant and ask:
+The assistant selects the operating mode from what you ask — you don't need to name it explicitly. Say what you want as you normally would; the trigger words below are just what the assistant is listening for.
+
+### Reviewing existing code
+
+Use these when you want the assistant to **evaluate** code that already exists — a Sonar-style pass, but with business impact and trade-offs attached.
 
 ```
 Review this service for production readiness.
@@ -67,7 +79,27 @@ Is this ready to deploy?
 What are the trade-offs between EF Core and Dapper for this use case?
 ```
 
-The assistant selects the appropriate operating mode based on your request.
+Expect a structured output: severity, rule ID, evidence, business impact, recommendation, trade-offs (see [Operating modes](#operating-modes) below for the exact format per mode).
+
+### Building new code
+
+Use these when you want the assistant to **write** new code — an endpoint, a consumer, a repository — already compliant with the EAF standard, instead of writing it first and reviewing it later.
+
+```
+Implement an endpoint that returns an order by id, following our architecture standards.
+```
+
+```
+Create a repository for the Invoice aggregate using Dapper.
+```
+
+```
+Add a message consumer for OrderPlaced that publishes to the outbox.
+```
+
+Expect working code as the primary output. The assistant applies the same rule catalog used in Review Mode (`CancellationToken` propagation, `IHttpClientFactory`, structured logging, parameterized queries, etc.) while writing it, and only adds a short rule annotation when a decision isn't obvious from the code itself — it does not return a findings report for code it just wrote.
+
+If you want an existing piece of code both built on and then audited, ask for the review separately once the code exists — the two modes are deliberately not merged into one output.
 
 ---
 
@@ -79,6 +111,7 @@ The assistant selects the appropriate operating mode based on your request.
 | Scorecard | "scorecard", "grade this", "how healthy is" | Capability grades A–F with executive summary |
 | Assessment | "is this ready", "should we deploy", "assess the risk" | Formal GO / GO WITH CONDITIONS / NO GO decision |
 | Advisory | "explain", "which is better", "trade-offs between" | Context-aware architectural guidance |
+| Build | "implement", "create", "write", "add", "generate" | Working code, compliant by construction, with rule IDs noted only where non-obvious |
 
 ---
 
@@ -138,3 +171,4 @@ Designed for:
 - **Simplicity wins.** Complexity must be justified by a measurable problem.
 - **Smallest safe improvement.** Incremental changes over rewrites.
 - **Understand before judging.** Business context determines the right decision.
+- **Compliant by construction.** In Build Mode, the same rule catalog is applied while writing code, not just while reviewing it — the goal is fewer findings later, not a bigger report now.
