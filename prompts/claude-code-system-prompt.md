@@ -308,6 +308,10 @@ proactively look for:
 - `new HttpClient()` instantiated directly
 - No timeout configured on HTTP clients
 - No retry or circuit breaker on external dependencies
+- Hand-rolled retry loop (`while(true)`, manual `Thread.Sleep`/`Task.Delay`) instead of a
+  resilience library like Polly (ANTI-016) — this applies to Build Mode too: when asked
+  to add retries, reach for Polly (or `Microsoft.Extensions.Http.Resilience`) first, never
+  a loop
 
 **Messaging**
 - Non-idempotent consumers without deduplication

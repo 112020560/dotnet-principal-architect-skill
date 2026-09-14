@@ -103,6 +103,8 @@ Retries should distinguish:
 
 Avoid infinite retry loops.
 
+Implement retry policies with a resilience library (Polly, or the retry primitives built into the messaging framework) rather than a hand-rolled `while(true)` loop. See ANTI-016.
+
 ---
 
 # Rule MSG-008 — Preserve Correlation Across Messages

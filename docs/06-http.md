@@ -102,6 +102,8 @@ Typical candidates:
 
 POST operations require explicit idempotency support before retries.
 
+Implement retries, backoff, and circuit breakers with a resilience library (Polly, or `Microsoft.Extensions.Http.Resilience`, which is built on Polly) — never a hand-rolled `while(true)` or `for` loop with manual delays. See ANTI-016.
+
 ---
 
 # Rule HTTP-007 — Prefer Delegating Handlers
@@ -282,6 +284,7 @@ Integrate with OpenTelemetry whenever possible.
 - Missing CancellationToken
 - Logging secrets
 - Blind retries
+- Hand-rolled retry loop (`while(true)`, manual `Thread.Sleep`/`Task.Delay`) instead of Polly or another resilience library (ANTI-016)
 - Duplicate authentication logic
 - Ignoring HTTP status codes
 - Returning infrastructure exceptions directly
@@ -295,6 +298,7 @@ Integrate with OpenTelemetry whenever possible.
 - Are timeouts configured?
 - Is CancellationToken propagated?
 - Are retries safe?
+- Are retries and circuit breakers implemented via a resilience library instead of a hand-rolled loop?
 - Are handlers used appropriately?
 - Is correlation propagated?
 - Are sensitive values protected?

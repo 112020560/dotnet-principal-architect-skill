@@ -312,6 +312,28 @@ Related Rules: API-006
 
 ---
 
+# ANTI-016 — Hand-Rolled Retry Loop
+
+## Symptoms
+
+- `while(true)` or manual `for` loops that retry a failing operation
+- Manual `Thread.Sleep` or `Task.Delay` between attempts
+- Retry count, backoff, or circuit-breaker logic reimplemented ad hoc per call site
+
+## Consequences
+
+- No circuit breaker — a failing dependency gets hammered instead of protected
+- Inconsistent backoff and jitter across the codebase
+- Untested edge cases: cancellation, max attempts, which exceptions are retryable
+
+## Recommended Fix
+
+Use a resilience library (Polly, or `Microsoft.Extensions.Http.Resilience` for `HttpClient`, which is built on Polly) for retries, backoff, and circuit breakers instead of writing the loop by hand.
+
+Related Rules: HTTP-006, MSG-007
+
+---
+
 # Common Review Strategy
 
 When an anti-pattern is detected:

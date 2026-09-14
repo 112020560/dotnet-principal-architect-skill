@@ -225,6 +225,7 @@ Once assigned, they must never be reused for another rule.
 | ANTI-013 | Overengineering. | docs/13-anti-patterns.md |
 | ANTI-014 | DTO Explosion. | docs/13-anti-patterns.md |
 | ANTI-015 | Service Locator. | docs/13-anti-patterns.md |
+| ANTI-016 | Hand-Rolled Retry Loop. | docs/13-anti-patterns.md |
 
 ---
 

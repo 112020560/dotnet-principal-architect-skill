@@ -101,6 +101,8 @@ Expect working code as the primary output. The assistant applies the same rule c
 
 If you want an existing piece of code both built on and then audited, ask for the review separately once the code exists — the two modes are deliberately not merged into one output.
 
+For a ready-to-paste set of prompts covering all five modes (in Spanish), see [`examples/prompts-de-uso.md`](examples/prompts-de-uso.md).
+
 ---
 
 ## Operating modes
@@ -139,6 +141,7 @@ The framework applies rules across 11 capability domains:
 
 ```
 prompts/        System prompts for each platform
+examples/       Ready-to-paste usage prompts covering all operating modes
 docs/           EAF rule catalog and domain reference
 reviews/        16 domain-specific review templates (pre-filled examples)
 scorecards/     16 scorecard templates

@@ -118,6 +118,7 @@ Used in Review Mode to flag existing violations, and in Build Mode as a pre-flig
 - `new HttpClient()` instantiated directly — socket exhaustion (HTTP-001)
 - No timeout configured on HTTP clients (HTTP-003)
 - No retry or circuit breaker on external calls (HTTP-002)
+- Hand-rolled retry loop (`while(true)`, manual `Thread.Sleep`/`Task.Delay`) instead of a resilience library like Polly (ANTI-016) — in Build Mode, when asked to add retries, reach for Polly (or `Microsoft.Extensions.Http.Resilience`) first, never a loop
 
 **Observability**
 - String interpolation in log statements: `$"Order {id}"` instead of `"Order {Id}"` (OBS-001)
