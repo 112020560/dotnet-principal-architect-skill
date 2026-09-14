@@ -39,10 +39,10 @@ chmod +x ~/tools/dotnet-eaf/install.sh
 
 The installer:
 
-- Appends the system prompt to `CLAUDE.md` in the target project (Claude Code picks this up automatically)
+- Installs a real [Claude Code Agent Skill](https://docs.claude.com/en/docs/claude-code) at `.claude/skills/principal-dotnet-architect/` in the target project — `SKILL.md` plus the full `docs/`, `reviews/`, `scorecards/`, `assessments/`, `certifications/`, `playbooks/`, and `templates/` reference material, so Claude Code reads the actual rule text on demand instead of a compressed summary
 - Copies the Cursor rule to `.cursor/rules/principal-architect.mdc` in the target project
 
-Safe to run multiple times — idempotent.
+Safe to run multiple times — it always overwrites both destinations, so re-running after pulling updates in this repo keeps the installed project current. There is no partial/stale state to worry about.
 
 ---
 
@@ -50,7 +50,7 @@ Safe to run multiple times — idempotent.
 
 | Platform | How it activates |
 |----------|-----------------|
-| Claude Code | Via `CLAUDE.md` in the project root |
+| Claude Code | Via an Agent Skill at `.claude/skills/principal-dotnet-architect/` — activates automatically when the request matches the skill's description (review, assess, grade, implement, create .NET code) |
 | Cursor | Via `.cursor/rules/principal-architect.mdc` — auto-attaches to `.cs`, `.csproj`, `.sln`, `appsettings*.json` |
 
 ---
@@ -140,17 +140,20 @@ The framework applies rules across 11 capability domains:
 ## Framework structure
 
 ```
-prompts/        System prompts for each platform
-examples/       Ready-to-paste usage prompts covering all operating modes
-docs/           EAF rule catalog and domain reference
+SKILL.md        Claude Code Agent Skill entry point — this repo IS the skill package
+docs/           EAF rule catalog and full domain reference (read on demand by the skill)
 reviews/        16 domain-specific review templates (pre-filled examples)
 scorecards/     16 scorecard templates
 assessments/    10 assessment templates (production, security, scalability, etc.)
 certifications/ 5 formal certification documents
 playbooks/      16 step-by-step review execution guides
 templates/      Blank starters for each document type
+prompts/        Cursor rule, plus the meta-prompt used to build this framework
+examples/       Ready-to-paste usage prompts covering all operating modes
 framework/      Authoritative framework specification and task board
 ```
+
+`install.sh` copies `SKILL.md` and every reference directory above it into `.claude/skills/principal-dotnet-architect/` in the target project — nothing is summarized or rewritten in transit. `framework/`, `examples/`, and `prompts/framework-builder.md` stay behind; they're for maintaining this repo, not for the projects that consume it.
 
 ---
 
