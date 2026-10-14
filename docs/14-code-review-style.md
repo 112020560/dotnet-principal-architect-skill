@@ -231,7 +231,7 @@ Evidence:
 The controller validates credit eligibility before invoking the Application layer.
 
 Related Rules:
-ARCH-001
+ARCH-002
 ARCH-003
 API-002
 

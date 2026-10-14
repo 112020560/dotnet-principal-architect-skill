@@ -13,6 +13,8 @@ The objective is to build systems that are resilient, scalable, observable, secu
 
 These rules apply equally to Azure, AWS, Google Cloud and private Kubernetes environments.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Cloud Principles
@@ -27,22 +29,9 @@ These rules apply equally to Azure, AWS, Google Cloud and private Kubernetes env
 
 ---
 
-# Rule CLOUD-001 — Design for Failure
+# Rule CLOUD-001 — Applications Are Stateless
 
 **Severity:** Critical
-
-Assume that:
-
-- Instances fail
-- Networks fail
-- Dependencies become unavailable
-- Storage may become temporarily inaccessible
-
-Applications should degrade gracefully.
-
----
-
-# Rule CLOUD-002 — Applications Should Be Stateless
 
 Keep application instances disposable.
 
@@ -57,22 +46,7 @@ Stateless services scale more easily.
 
 ---
 
-# Rule CLOUD-003 — Infrastructure Must Be Reproducible
-
-Prefer Infrastructure as Code.
-
-Examples:
-
-- Terraform
-- Bicep
-- CloudFormation
-- Pulumi
-
-Avoid manual production configuration.
-
----
-
-# Rule CLOUD-004 — Configuration Must Be Externalized
+# Rule CLOUD-002 — Configuration Comes From the Environment
 
 Do not embed environment-specific configuration in code.
 
@@ -86,27 +60,7 @@ Configuration should change without recompilation.
 
 ---
 
-# Rule CLOUD-005 — Containers Must Be Immutable
-
-Containers should be built once and promoted across environments.
-
-Avoid modifying running containers.
-
----
-
-# Rule CLOUD-006 — Health Probes Are Operational Contracts
-
-Implement:
-
-- Liveness
-- Readiness
-- Startup probes
-
-Health endpoints should accurately represent service state.
-
----
-
-# Rule CLOUD-007 — Horizontal Scaling Is Preferred
+# Rule CLOUD-003 — Design for Horizontal Scalability
 
 Prefer scaling out before scaling up.
 
@@ -114,108 +68,64 @@ Applications should avoid relying on local memory or local files.
 
 ---
 
-# Rule CLOUD-008 — Secrets Must Never Be Stored in Images
+# Rule CLOUD-004 — Health Checks Are Mandatory
 
-Container images must not contain:
+Implement liveness, readiness, and startup probes.
 
-- Passwords
-- API keys
-- Certificates
-- Tokens
-
-Retrieve secrets securely at runtime.
+Health endpoints should accurately represent service state — not just "the process is running."
 
 ---
 
-# Rule CLOUD-009 — Observe Everything
+# Rule CLOUD-005 — Design for Resiliency
 
-Cloud-native applications must expose:
+Assume instances fail, networks fail, dependencies become unavailable, and storage may become temporarily inaccessible. Applications should degrade gracefully instead of failing completely.
 
-- Logs
-- Metrics
-- Traces
-
-Observability is required for operating distributed systems.
-
----
-
-# Rule CLOUD-010 — Cost Is an Architectural Concern
-
-Review:
-
-- Compute utilization
-- Storage growth
-- Network traffic
-- Idle resources
-
-Optimize based on measurable business value.
-
----
-
-# Rule CLOUD-011 — Resilience Requires Redundancy
-
-Use redundancy where business continuity requires it.
-
-Examples:
+Use redundancy where business continuity requires it:
 
 - Multiple instances
 - Availability zones
 - Replicated databases
 - Multi-region deployments (when justified)
 
----
-
-# Rule CLOUD-012 — Use Managed Services Intentionally
-
-Managed services reduce operational overhead.
-
-Evaluate:
-
-- Cost
-- Vendor lock-in
-- Operational complexity
-- Team expertise
-
-Managed services are not automatically the correct choice.
+Related Rules: HTTP-002, MSG-004.
 
 ---
 
-# Rule CLOUD-013 — Deployments Must Be Automated
+# Additional Engineering Guidance
 
-Every deployment should be repeatable.
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-Prefer:
+## Infrastructure Is Reproducible and Deployments Are Automated
 
-- CI/CD
-- GitOps
-- Automated rollback
-- Deployment validation
+Prefer Infrastructure as Code (Terraform, Bicep, CloudFormation, Pulumi) over manual production configuration, and automate deployments with CI/CD, GitOps, automated rollback, and deployment validation.
 
-Avoid manual production deployments.
+## Containers Must Be Immutable
 
----
+Containers should be built once and promoted across environments. Avoid modifying running containers.
 
-# Rule CLOUD-014 — Security Follows Identity
+## Secrets Must Never Be Stored in Images
 
-Prefer identity-based authentication between services.
+Container images must not contain passwords, API keys, certificates, or tokens. Retrieve secrets securely at runtime. See SEC-004.
 
-Examples:
+## Observe Everything
 
-- Managed Identity
-- IAM Roles
-- Workload Identity
+Cloud-native applications must expose logs, metrics, and traces. See the Observability domain.
 
-Reduce reliance on long-lived secrets.
+## Cost Is an Architectural Concern
 
----
+Review compute utilization, storage growth, network traffic, and idle resources. Optimize based on measurable business value.
 
-# Rule CLOUD-015 — Cloud Portability Is a Business Decision
+## Use Managed Services Intentionally
 
-Portability has a cost.
+Managed services reduce operational overhead but are not automatically the correct choice — evaluate cost, vendor lock-in, operational complexity, and team expertise.
 
-Do not pursue multi-cloud strategies without measurable business justification.
+## Security Follows Identity
 
-Optimize for business value, not architectural purity.
+Prefer identity-based authentication between services (Managed Identity, IAM Roles, Workload Identity) to reduce reliance on long-lived secrets. See the Security domain.
+
+## Cloud Portability Is a Business Decision
+
+Portability has a cost. Do not pursue multi-cloud strategies without measurable business justification — optimize for business value, not architectural purity.
 
 ---
 

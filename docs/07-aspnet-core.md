@@ -11,6 +11,8 @@ This document defines engineering rules for building ASP.NET Core applications.
 
 The goal is to promote maintainable, observable, secure and scalable APIs while avoiding framework-driven architecture.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # ASP.NET Core Principles
@@ -27,9 +29,7 @@ The goal is to promote maintainable, observable, secure and scalable APIs while 
 
 **Severity:** High
 
-Do not recommend Controllers or Minimal APIs as a universal standard.
-
-Choose according to the service.
+Do not recommend Controllers or Minimal APIs as a universal standard. Choose according to the service.
 
 ## Decision Matrix
 
@@ -43,13 +43,7 @@ Choose according to the service.
 | Rapid prototyping | ⭐⭐⭐⭐⭐ | ⭐⭐⭐☆☆ |
 | Large development team | ⭐⭐⭐☆☆ | ⭐⭐⭐⭐⭐ |
 
-### Engineering Note
-
-Both approaches execute on the same ASP.NET Core pipeline.
-
-Performance differences are usually negligible.
-
-Choose based on maintainability, complexity, and team experience.
+Both approaches execute on the same ASP.NET Core pipeline — performance differences are usually negligible. Choose based on maintainability, complexity, and team experience.
 
 ---
 
@@ -67,31 +61,11 @@ Avoid:
 - Database access
 - Workflow orchestration
 
----
-
-# Rule API-003 — Centralize Exception Handling
-
-Use a centralized exception handling strategy.
-
-Prefer:
-
-- IExceptionHandler (.NET 8+)
-- ProblemDetails
-- Consistent error contracts
-
-Avoid try/catch blocks in every endpoint.
+Related Rules: ARCH-003.
 
 ---
 
-# Rule API-004 — Use ProblemDetails
-
-Return RFC 9457 ProblemDetails (or equivalent standardized error contracts).
-
-Clients should receive consistent error responses.
-
----
-
-# Rule API-005 — Validate Requests at the Boundary
+# Rule API-003 — Validation Occurs at the Application Boundary
 
 Validate incoming requests before invoking business logic.
 
@@ -105,7 +79,31 @@ Validation is not business logic.
 
 ---
 
-# Rule API-006 — Dependency Injection Must Reflect Lifetimes
+# Rule API-004 — Centralize Exception Handling
+
+Use a centralized exception handling strategy.
+
+Prefer:
+
+- `IExceptionHandler` (.NET 8+)
+- ProblemDetails
+- Consistent error contracts
+
+Avoid try/catch blocks in every endpoint.
+
+---
+
+# Rule API-005 — Implement RFC 9457 Problem Details
+
+Return RFC 9457 ProblemDetails (or equivalent standardized error contracts).
+
+Clients should receive consistent error responses.
+
+Related Rules: HTTP-007.
+
+---
+
+# Rule API-006 — Configure Dependency Injection Correctly
 
 Choose service lifetimes intentionally.
 
@@ -113,11 +111,11 @@ Choose service lifetimes intentionally.
 - Scoped
 - Transient
 
-Review lifetime mismatches carefully.
+Review lifetime mismatches carefully — a singleton capturing a scoped dependency is a common and subtle defect.
 
 ---
 
-# Rule API-007 — Configuration Must Use the Options Pattern
+# Rule API-007 — Use the Options Pattern for Configuration
 
 Strongly typed configuration improves safety and discoverability.
 
@@ -136,83 +134,50 @@ Middleware is appropriate for:
 - Rate limiting
 - Exception handling
 
-Avoid business rules inside middleware.
+Avoid business rules inside middleware — a middleware that approves, validates, or decides a business workflow ties that decision to the ASP.NET Core pipeline instead of the Domain.
+
+Related Rules: ANTI-006, ARCH-002.
 
 ---
 
 # Rule API-009 — Background Services Should Be Autonomous
 
-BackgroundService implementations should:
+`BackgroundService` implementations should:
 
-- Respect CancellationToken
+- Respect `CancellationToken`
 - Handle transient failures
 - Log meaningful events
 - Avoid blocking threads
 
----
+They should orchestrate; the Domain decides. A hosted service that decides business outcomes directly hides workflows and duplicates rules that belong elsewhere.
 
-# Rule API-010 — Health Checks Are Operational Contracts
-
-Expose health endpoints for:
-
-- Readiness
-- Liveness
-- Dependencies
-
-Health checks should reflect actual operational state.
+Related Rules: ANTI-007, ARCH-006.
 
 ---
 
-# Rule API-011 — API Versioning Must Be Intentional
+# Additional Engineering Guidance
 
-Version APIs only when required.
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-Choose a strategy and apply it consistently.
+## Health Checks Are Operational Contracts
 
-Examples:
+Expose health endpoints for readiness, liveness, and dependencies. Health checks should reflect actual operational state, not just "the process is running." See CLOUD-004.
 
-- URL
-- Header
-- Media Type
+## API Versioning Must Be Intentional
 
----
+Version APIs only when required. Choose a strategy (URL, header, media type) and apply it consistently. See HTTP-012.
 
-# Rule API-012 — Authentication and Authorization Are Separate Concerns
+## Endpoint Filters Are Cross-Cutting Tools
 
-Authentication identifies.
+Endpoint Filters suit validation, logging, metrics, and authorization helpers — avoid embedding business rules in them, for the same reason middleware shouldn't carry them (API-008).
 
-Authorization decides.
+## Authentication and Authorization Are Separate Concerns
 
-Keep both concerns independent.
+Authentication identifies; authorization decides. Keep both concerns independent. See SEC-001.
 
----
+## Respect HTTP Semantics and Prefer Streaming for Large Payloads
 
-# Rule API-013 — Respect HTTP Semantics
-
-Use correct HTTP verbs and status codes.
-
-Avoid using HTTP transport to represent business workflow incorrectly.
-
----
-
-# Rule API-014 — Endpoint Filters Are Cross-Cutting Tools
-
-Endpoint Filters are suitable for:
-
-- Validation
-- Logging
-- Metrics
-- Authorization helpers
-
-Avoid embedding business rules.
-
----
-
-# Rule API-015 — Prefer Streaming for Large Payloads
-
-Avoid buffering large responses when streaming is appropriate.
-
-Review file downloads, exports and proxies.
+These are owned by the HTTP domain — see HTTP-006 and HTTP-010/PERF-009. An ASP.NET Core endpoint is still subject to both.
 
 ---
 

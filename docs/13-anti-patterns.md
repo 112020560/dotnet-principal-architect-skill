@@ -43,7 +43,7 @@ The objective is to help reviewers recognize symptoms, understand consequences, 
 
 Move orchestration to the Application layer and business decisions to the Domain.
 
-Related Rules: ARCH-001, ARCH-003, API-002
+Related Rules: ARCH-002, ARCH-003, API-002
 
 ---
 
@@ -65,7 +65,7 @@ Related Rules: ARCH-001, ARCH-003, API-002
 
 Split by business capability.
 
-Related Rules: ARCH-004, ARCH-008
+Related Rules: ARCH-005
 
 ---
 
@@ -109,7 +109,7 @@ Related Rules: DB-006, DB-007
 
 Propagate async end-to-end.
 
-Related Rules: PERF-003
+Related Rules: PERF-004
 
 ---
 
@@ -128,7 +128,7 @@ Wrapping naturally asynchronous I/O inside Task.Run.
 
 Use true asynchronous APIs.
 
-Related Rules: PERF-004
+Related Rules: PERF-003
 
 ---
 
@@ -146,7 +146,7 @@ Business rules become tied to ASP.NET Core.
 
 Restrict middleware to cross-cutting concerns.
 
-Related Rules: API-008, ARCH-001
+Related Rules: API-008, ARCH-002
 
 ---
 
@@ -164,7 +164,7 @@ Hidden workflows and duplicated rules.
 
 Background services orchestrate; Domain decides.
 
-Related Rules: API-009, ARCH-004
+Related Rules: API-009, ARCH-006
 
 ---
 
@@ -200,7 +200,7 @@ Network overhead and increased latency.
 
 Design APIs around business capabilities.
 
-Related Rules: HTTP-013
+Related Rules: PERF-008
 
 ---
 
@@ -218,7 +218,7 @@ Strong coupling and deployment constraints.
 
 Own data by bounded context.
 
-Related Rules: ARCH-008, DB-001
+Related Rules: DB-001
 
 ---
 
@@ -272,7 +272,7 @@ Unnecessary complexity.
 
 Adopt complexity only when justified.
 
-Related Rules: ARCH-009
+Related Rules: see "Prefer Simplicity Until Complexity Is Justified" in docs/03-architecture.md.
 
 ---
 
@@ -330,7 +330,7 @@ Related Rules: API-006
 
 Use a resilience library (Polly, or `Microsoft.Extensions.Http.Resilience` for `HttpClient`, which is built on Polly) for retries, backoff, and circuit breakers instead of writing the loop by hand.
 
-Related Rules: HTTP-006, MSG-007
+Related Rules: HTTP-002, MSG-007
 
 ---
 

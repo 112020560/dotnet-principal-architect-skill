@@ -11,6 +11,8 @@ This document defines engineering rules for designing, implementing, and reviewi
 
 The focus is correctness, resiliency, observability, maintainability, and performance.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # HTTP Principles
@@ -25,7 +27,7 @@ The focus is correctness, resiliency, observability, maintainability, and perfor
 
 ---
 
-# Rule HTTP-001 — Reuse HTTP Connections
+# Rule HTTP-001 — Use IHttpClientFactory or an Equivalent Strategy
 
 **Severity:** Critical
 
@@ -35,26 +37,23 @@ Prefer:
 - Long-lived HttpClient
 - SocketsHttpHandler
 
-Avoid creating a new HttpClient per request.
+Avoid creating a new HttpClient per request — it exhausts sockets under load even though each individual instance disposes cleanly.
+
+A static HttpClient backed by a properly configured SocketsHttpHandler is an acceptable equivalent when DI is unavailable. Choose based on architecture, not dogma.
 
 ---
 
-# Rule HTTP-002 — IHttpClientFactory Is Not Mandatory
+# Rule HTTP-002 — Configure Resilient HTTP Clients
 
-Use IHttpClientFactory when:
+Retry only operations that are safe to repeat. Typical candidates: GET, HEAD. POST operations require explicit idempotency support before retries.
 
-- Dependency Injection is available.
-- Multiple clients require configuration.
-- Delegating handlers are useful.
-- Centralized resiliency policies are needed.
+Implement retries, backoff, and circuit breakers with a resilience library (Polly, or `Microsoft.Extensions.Http.Resilience`, which is built on Polly) — never a hand-rolled `while(true)` or `for` loop with manual delays. See ANTI-016.
 
-A static HttpClient backed by a properly configured SocketsHttpHandler is acceptable when DI is unavailable.
-
-Choose based on architecture, not dogma.
+Related Rules: MSG-007.
 
 ---
 
-# Rule HTTP-003 — Configure Timeouts Explicitly
+# Rule HTTP-003 — Define Explicit Timeouts
 
 Never rely on infinite or implicit defaults.
 
@@ -69,17 +68,11 @@ Timeouts should match business expectations.
 
 ---
 
-# Rule HTTP-004 — Propagate Correlation IDs
+# Rule HTTP-004 — Use Typed Clients
 
-Every outbound request should propagate a correlation identifier.
+Prefer a typed client (a class wrapping `HttpClient`, registered via `AddHttpClient<T>()`) over passing around a raw, unconfigured `HttpClient`.
 
-Common headers include:
-
-- X-Trace-Id
-- traceparent
-- tracestate
-
-Distributed tracing depends on propagation.
+Cross-cutting concerns — authentication, correlation IDs, logging, metrics, custom headers — belong in `DelegatingHandler`s attached to the typed client, not duplicated inside every call site.
 
 ---
 
@@ -91,125 +84,9 @@ Avoid wasting resources after upstream cancellation.
 
 ---
 
-# Rule HTTP-006 — Retries Require Idempotency
+# Rule HTTP-006 — Respect REST Semantics
 
-Retry only operations that are safe to repeat.
-
-Typical candidates:
-
-- GET
-- HEAD
-
-POST operations require explicit idempotency support before retries.
-
-Implement retries, backoff, and circuit breakers with a resilience library (Polly, or `Microsoft.Extensions.Http.Resilience`, which is built on Polly) — never a hand-rolled `while(true)` or `for` loop with manual delays. See ANTI-016.
-
----
-
-# Rule HTTP-007 — Prefer Delegating Handlers
-
-Cross-cutting concerns belong in DelegatingHandlers.
-
-Examples:
-
-- Authentication
-- Correlation IDs
-- Logging
-- Metrics
-- Telemetry
-- Custom headers
-
-Avoid duplicating this logic inside every client.
-
----
-
-# Rule HTTP-008 — Observe Before Debugging
-
-Log enough information to diagnose production problems.
-
-Recommended:
-
-- Method
-- URI
-- Status code
-- Duration
-- Correlation ID
-
-Avoid logging sensitive information.
-
----
-
-# Rule HTTP-009 — Sensitive Data Must Never Be Logged
-
-Never log:
-
-- Passwords
-- Secrets
-- Tokens
-- Full card numbers
-- OTP values
-- Personal identifiers unless justified
-
-Mask sensitive values whenever possible.
-
----
-
-# Rule HTTP-010 — Use ResponseHeadersRead for Large Responses
-
-Prefer HttpCompletionOption.ResponseHeadersRead when:
-
-- Streaming files
-- Large payloads
-- Forwarding content
-
-Avoid buffering entire responses unnecessarily.
-
----
-
-# Rule HTTP-011 — Serialize Only What Is Needed
-
-Avoid oversized payloads.
-
-Prefer DTOs designed for transport instead of exposing domain models.
-
-Minimize payload size.
-
----
-
-# Rule HTTP-012 — Handle Errors Explicitly
-
-Map HTTP failures into meaningful application results.
-
-Differentiate:
-
-- Transport failures
-- Timeout
-- Authentication
-- Authorization
-- Business validation
-- Unexpected server failures
-
-Do not expose raw infrastructure exceptions.
-
----
-
-# Rule HTTP-013 — Design Clients Around Business Capabilities
-
-Clients should represent business services.
-
-Examples:
-
-- PaymentClient
-- CustomerClient
-- NotificationClient
-
-Avoid generic REST helper classes throughout the application.
-
----
-
-# Rule HTTP-014 — Respect HTTP Semantics
-
-Use HTTP status codes correctly.
+Use HTTP status codes and verbs correctly.
 
 Examples:
 
@@ -225,55 +102,106 @@ Examples:
 - 422 Unprocessable Content
 - 500 Internal Server Error
 
-Business validation failures are not transport failures.
+Business validation failures are not transport failures — do not collapse every outcome into 200 OK with an error field in the body, and do not use HTTP status codes to carry business meaning they don't have.
 
 ---
 
-# Rule HTTP-015 — Use Compression Intentionally
+# Rule HTTP-007 — Return Problem Details for Errors
 
-Enable compression for large payloads when supported.
+Map HTTP failures into meaningful application results using RFC 9457 Problem Details (or an equivalent standardized error contract).
 
-Evaluate CPU cost versus bandwidth savings.
-
----
-
-# Rule HTTP-016 — Prefer HTTP/2 or HTTP/3 When Supported
-
-Use newer protocol versions when infrastructure supports them.
-
-Benefits include:
-
-- Multiplexing
-- Reduced latency
-- Better connection utilization
+Differentiate transport failures, timeouts, authentication, authorization, business validation, and unexpected server failures. Do not expose raw infrastructure exceptions to the caller.
 
 ---
 
-# Rule HTTP-017 — Configure Proxies Explicitly
+# Rule HTTP-008 — Validate Requests at the Boundary
 
-Proxy usage should be intentional.
-
-Document:
-
-- Corporate proxies
-- Authentication
-- Proxy bypass rules
-
-Unexpected proxy configuration is a common production issue.
+Validate outbound request payloads before sending them, and validate that a response matches the expected contract before trusting it downstream. Do not let an external system's malformed or unexpected response propagate unchecked into business logic.
 
 ---
 
-# Rule HTTP-018 — Instrument HTTP Communication
+# Rule HTTP-009 — Never Log Sensitive Information
 
-Capture:
+Never log:
 
-- Duration
-- Success rate
-- Failure rate
-- Status codes
-- Retry count
+- Passwords
+- Secrets
+- Tokens
+- Full card numbers
+- OTP values
+- Personal identifiers unless justified
 
-Integrate with OpenTelemetry whenever possible.
+Mask sensitive values whenever possible.
+
+Related Rules: SEC-004, OBS-004.
+
+---
+
+# Rule HTTP-010 — Prefer ResponseHeadersRead When Appropriate
+
+Prefer `HttpCompletionOption.ResponseHeadersRead` when:
+
+- Streaming files
+- Handling large payloads
+- Forwarding content
+
+Avoid buffering entire responses unnecessarily.
+
+---
+
+# Rule HTTP-011 — Design DTOs Intentionally
+
+Prefer DTOs designed for transport instead of exposing domain models directly. Avoid oversized payloads — serialize only what the consumer needs.
+
+Related Rules: ANTI-014 (DTO Explosion).
+
+---
+
+# Rule HTTP-012 — Version APIs Deliberately
+
+Version APIs only when a breaking change is unavoidable. Choose one strategy (URL, header, or media type) and apply it consistently across the service.
+
+---
+
+# Rule HTTP-013 — External Integrations Belong Behind Ports and Adapters
+
+Clients should represent business services, not generic transport helpers.
+
+Examples:
+
+- `PaymentClient`
+- `CustomerClient`
+- `NotificationClient`
+
+Avoid generic REST helper classes used throughout the application — they leak the specific external integration's shape into every caller instead of isolating it behind an abstraction owned by the business.
+
+Related Rules: ARCH-009, ARCH-011.
+
+---
+
+# Additional Engineering Guidance
+
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
+
+## Propagate Correlation IDs
+
+Every outbound request should propagate a correlation identifier (`traceparent`, `tracestate`, `X-Trace-Id`). Distributed tracing depends on propagation. See OBS-001, MSG-008.
+
+## Observe HTTP Communication
+
+Log method, URI, status code, duration, and correlation ID for outbound calls — without logging sensitive information (HTTP-009). Capture duration, success/failure rate, status codes, and retry count, and integrate with OpenTelemetry where possible.
+
+## Use Compression Intentionally
+
+Enable compression for large payloads when supported, weighing CPU cost against bandwidth savings.
+
+## Prefer HTTP/2 or HTTP/3 When Supported
+
+Newer protocol versions offer multiplexing, reduced latency, and better connection utilization when the infrastructure supports them.
+
+## Configure Proxies Explicitly
+
+Proxy usage should be intentional and documented (corporate proxies, authentication, bypass rules). Unexpected proxy configuration is a common production issue.
 
 ---
 

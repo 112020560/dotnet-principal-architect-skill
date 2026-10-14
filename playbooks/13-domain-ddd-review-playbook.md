@@ -68,7 +68,7 @@ It answers: How should this review be executed?
 - Check for overlapping responsibilities between bounded contexts.
 - Verify that bounded contexts do not share the same database tables.
 
-Rule references: ARCH-001, DB-001.
+Rule references: DB-001.
 
 ### Step 2 — Evaluate Ubiquitous Language
 

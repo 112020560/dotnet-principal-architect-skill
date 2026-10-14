@@ -11,6 +11,8 @@ This document defines engineering rules for building secure .NET applications an
 
 The goal is to reduce security risk while preserving maintainability, performance, and developer productivity.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Security Principles
@@ -24,19 +26,9 @@ The goal is to reduce security risk while preserving maintainability, performanc
 
 ---
 
-# Rule SEC-001 — Authentication and Authorization Are Different
+# Rule SEC-001 — Validate Every External Input
 
 **Severity:** Critical
-
-Authentication identifies a caller.
-
-Authorization determines what the caller may do.
-
-Never mix these responsibilities.
-
----
-
-# Rule SEC-002 — Validate Every External Input
 
 Treat all incoming data as untrusted.
 
@@ -50,9 +42,34 @@ Validate:
 
 Validation protects boundaries, not business rules.
 
+Related Rules: HTTP-008, API-003.
+
 ---
 
-# Rule SEC-003 — Never Store Secrets in Source Code
+# Rule SEC-002 — Apply Least Privilege
+
+Applications, users and services should receive only the permissions they require.
+
+Review permissions regularly.
+
+---
+
+# Rule SEC-003 — Authenticate Before Authorizing
+
+Authentication identifies a caller. Authorization determines what the caller may do. Never mix these responsibilities.
+
+Prefer standard, well-reviewed mechanisms:
+
+- OAuth2
+- OpenID Connect
+- JWT
+- Mutual TLS (where appropriate)
+
+Avoid custom authentication mechanisms.
+
+---
+
+# Rule SEC-004 — Never Expose Secrets
 
 Use secure secret management.
 
@@ -63,41 +80,25 @@ Examples:
 - HashiCorp Vault
 - Environment variables
 
-Rotate secrets regularly.
+Rotate secrets regularly. Never store secrets in source code or configuration files committed to version control.
+
+Related Rules: OBS-004, HTTP-009.
 
 ---
 
-# Rule SEC-004 — Protect Sensitive Data
+# Rule SEC-005 — Protect Sensitive Data in Transit and at Rest
 
-Encrypt sensitive information:
+Encrypt sensitive information at rest and in transit. Require TLS for all production communication — reject insecure transport unless explicitly justified.
 
-- At rest
-- In transit
-
-Mask sensitive values in logs.
-
-Never expose credentials, tokens, OTPs, CVVs or full PANs.
+Mask sensitive values in logs. Never expose credentials, tokens, OTPs, CVVs, or full PANs.
 
 ---
 
-# Rule SEC-005 — Use HTTPS Everywhere
+# Rule SEC-006 — Fail Securely
 
-Require TLS for all production communication.
+Unexpected failures should deny access by default.
 
-Reject insecure transport unless explicitly justified.
-
----
-
-# Rule SEC-006 — Use Strong Authentication
-
-Prefer:
-
-- OAuth2
-- OpenID Connect
-- JWT
-- Mutual TLS (where appropriate)
-
-Avoid custom authentication mechanisms.
+Avoid exposing stack traces or internal implementation details.
 
 ---
 
@@ -109,30 +110,21 @@ Prefer policy-based authorization over scattered role checks.
 
 ---
 
-# Rule SEC-008 — Security Logging Must Be Actionable
+# Rule SEC-008 — Protect Against Injection
 
-Log security-relevant events:
+Always use parameterized queries.
 
-- Login
-- Logout
-- Failed authentication
-- Authorization failures
-- Privilege changes
-- Secret rotation
+Avoid string concatenation for:
 
-Do not log secrets.
+- SQL
+- Shell commands
+- Dynamic queries
 
----
-
-# Rule SEC-009 — Apply Least Privilege
-
-Applications, users and services should receive only the permissions they require.
-
-Review permissions regularly.
+Related Rules: DB (persistence layer), ANTI.
 
 ---
 
-# Rule SEC-010 — Dependencies Must Be Maintained
+# Rule SEC-009 — Dependencies Must Be Maintained
 
 Keep frameworks and libraries updated.
 
@@ -144,15 +136,7 @@ Review:
 
 ---
 
-# Rule SEC-011 — Fail Securely
-
-Unexpected failures should deny access by default.
-
-Avoid exposing stack traces or internal implementation details.
-
----
-
-# Rule SEC-012 — Rate Limiting Protects Availability
+# Rule SEC-010 — Rate Limiting Protects Availability
 
 Protect public endpoints against abuse.
 
@@ -164,42 +148,21 @@ Review:
 
 ---
 
-# Rule SEC-013 — Protect Against Injection
+# Additional Engineering Guidance
 
-Always use parameterized queries.
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-Avoid string concatenation for:
+## Security Logging Must Be Actionable
 
-- SQL
-- Shell commands
-- Dynamic queries
+Log security-relevant events — login, logout, failed authentication, authorization failures, privilege changes, secret rotation — without logging secrets themselves. See OBS-001.
 
----
+## Secure File Handling
 
-# Rule SEC-014 — Secure File Handling
+Validate size, type, extension, and content of uploaded files. Store uploaded files outside the application root whenever possible.
 
-Validate:
+## Security Is Continuously Reviewed
 
-- Size
-- Type
-- Extension
-- Content
-
-Store uploaded files outside the application root whenever possible.
-
----
-
-# Rule SEC-015 — Security Is Continuously Reviewed
-
-Perform:
-
-- Dependency scanning
-- Secret scanning
-- Static analysis
-- Penetration testing
-- Security code reviews
-
-Security is an ongoing engineering activity.
+Perform dependency scanning, secret scanning, static analysis, penetration testing, and security code reviews as an ongoing engineering activity, not a one-time gate.
 
 ---
 

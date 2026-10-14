@@ -13,6 +13,8 @@ The objective is to maximize measurable business value while avoiding premature 
 
 Performance recommendations must always follow the philosophy and review process defined in this knowledge base.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Performance Principles
@@ -42,54 +44,70 @@ Preferred evidence:
 - Production metrics
 - SQL execution plans
 
----
-
-# Rule PERF-002 — Optimize the Largest Bottleneck First
-
-Prioritize improvements in this order:
-
-1. Database
-2. Network
-3. Disk I/O
-4. Serialization
-5. Concurrency
-6. Memory
-7. CPU
-8. Micro-optimizations
+Related Rules: ANTI-012 (Premature Optimization).
 
 ---
 
-# Rule PERF-003 — Async All the Way
+# Rule PERF-002 — Prefer Asynchronous I/O
 
-Avoid blocking asynchronous flows.
+True asynchronous APIs free the calling thread instead of blocking it while waiting on I/O (database, HTTP, disk, messaging).
 
-Avoid:
-
-- .Result
-- .Wait()
-- Task.Run() around I/O
-
-Prefer true async APIs.
+Prefer `async`/`await` end-to-end over any blocking equivalent. This is the default for I/O-bound work; see PERF-003 and PERF-004 for the two ways this default is most commonly violated.
 
 ---
 
-# Rule PERF-004 — Task.Run Is Not an Async Strategy
+# Rule PERF-003 — Never Wrap Asynchronous I/O With Task.Run
 
-Task.Run is appropriate for CPU-bound work.
+`Task.Run` is appropriate for genuinely CPU-bound work. It is not an async strategy for I/O.
 
-Do not wrap asynchronous I/O simply to "make it async".
+## Symptoms
+
+Wrapping naturally asynchronous I/O (an EF Core call, an HTTP request, a file read) inside `Task.Run` just to "make it async."
+
+## Consequences
+
+- Wasted ThreadPool threads
+- No real scalability improvement — the I/O still blocks a thread, just a different one
+
+## Recommended Fix
+
+Use the true asynchronous API the library already exposes instead of wrapping a synchronous one.
+
+Related Rules: ANTI-005 (Task.Run Around I/O).
+
+---
+
+# Rule PERF-004 — Avoid Sync-over-Async
+
+## Symptoms
+
+- `.Result`
+- `.Wait()`
+- `.GetAwaiter().GetResult()`
+
+## Consequences
+
+- Thread starvation
+- Deadlocks (particularly under a synchronization context)
+- Reduced scalability
+
+## Recommended Fix
+
+Propagate `async`/`await` end-to-end instead of blocking on a Task partway through the call chain.
+
+Related Rules: ANTI-004 (Sync over Async).
 
 ---
 
 # Rule PERF-005 — Propagate CancellationToken
 
-Every async boundary should propagate CancellationToken whenever practical.
+Every async boundary should propagate `CancellationToken` whenever practical.
 
-This reduces wasted work and improves resource utilization.
+This reduces wasted work and improves resource utilization when a caller disconnects or a request times out.
 
 ---
 
-# Rule PERF-006 — Allocation Must Be Intentional
+# Rule PERF-006 — Minimize Allocations
 
 Reduce unnecessary allocations by:
 
@@ -102,107 +120,71 @@ Only optimize allocations after measurement.
 
 ---
 
-# Rule PERF-007 — ValueTask Is a Specialized Optimization
+# Rule PERF-007 — Avoid Unnecessary Object Creation
 
-Use ValueTask only when:
+Avoid allocating objects that the business logic doesn't need:
 
-- The operation frequently completes synchronously.
-- Profiling shows allocation pressure.
+- Boxing value types in hot paths
+- Allocating a new collection where an existing one (or a span/slice) would do
+- Constructing DTOs or wrapper objects per iteration inside a loop when one reusable instance would do
 
-Otherwise, prefer Task.
-
----
-
-# Rule PERF-008 — Avoid Excessive LINQ Chains
-
-LINQ improves readability.
-
-Review long query chains only when profiling identifies them as significant.
-
-Never sacrifice maintainability for hypothetical gains.
+`ValueTask` is a specialized tool for this — use it only when an operation frequently completes synchronously and profiling shows allocation pressure from `Task`. Otherwise prefer `Task`; `ValueTask` has sharp edges (it must not be awaited twice).
 
 ---
 
-# Rule PERF-009 — Minimize Serialization Costs
+# Rule PERF-008 — Batch Operations When Appropriate
 
-Review:
+Prefer one batched call over many small ones when the workload allows it: bulk database writes instead of row-by-row loops, a single HTTP call with multiple items instead of one call per item, chunked processing for large datasets.
 
-- Payload size
-- Nested graphs
-- Redundant properties
-- Streaming opportunities
+Review long LINQ chains only when profiling identifies them as a measurable cost — do not sacrifice readability for a hypothetical gain.
 
-Transfer only required data.
+Related Rules: ANTI-008 (N+1 Queries), ANTI-009 (Chatty APIs).
 
 ---
 
-# Rule PERF-010 — HttpClient Must Reuse Connections
+# Rule PERF-009 — Prefer Streaming for Large Payloads
 
-Prefer:
+Review payload size, nested graphs, redundant properties, and streaming opportunities before transferring data. Transfer only what is required.
 
-- IHttpClientFactory
-- Long-lived HttpClient
-- SocketsHttpHandler
+For large HTTP responses, prefer `HttpCompletionOption.ResponseHeadersRead` over buffering the entire response.
 
-Avoid creating HttpClient per request.
+Related Rules: HTTP-010.
 
 ---
 
-# Rule PERF-011 — ThreadPool Threads Are Valuable
+# Rule PERF-010 — Measure With BenchmarkDotNet When Required
 
-Avoid blocking ThreadPool threads with:
-
-- Sleep
-- Wait
-- Long synchronous I/O
-
-Blocking reduces scalability.
+Use BenchmarkDotNet for performance-critical decisions. Benchmark representative workloads and avoid synthetic conclusions that don't reflect production traffic shape.
 
 ---
 
-# Rule PERF-012 — Logging Has a Cost
+# Additional Engineering Guidance
 
-Prefer structured logging.
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-Avoid expensive serialization when log level is disabled.
+## Optimize the Largest Bottleneck First
 
-Do not log excessive payloads in production unless justified.
+Prioritize improvements in this order: database, network, disk I/O, serialization, concurrency, memory, CPU, micro-optimizations. Most measurable gains come from the top of this list.
 
----
+## HttpClient Must Reuse Connections
 
-# Rule PERF-013 — Optimize Database Access Before C#
+Prefer `IHttpClientFactory`, a long-lived `HttpClient`, or `SocketsHttpHandler` over creating a client per request. This is the performance angle of HTTP-001, which owns the rule.
 
-Review:
+## ThreadPool Threads Are Valuable
 
-- Round trips
-- Indexes
-- N+1
-- Execution plans
-- Projections
+Avoid blocking ThreadPool threads with `Sleep`, `Wait`, or long synchronous I/O — blocking reduces the pool's capacity to serve other requests.
 
-Database improvements often produce the largest gains.
+## Logging Has a Cost
 
----
+Prefer structured logging and avoid expensive serialization when the log level is disabled. Do not log excessive payloads in production unless justified.
 
-# Rule PERF-014 — Cache Intentionally
+## Optimize Database Access Before C#
 
-Cache only when:
+Round trips, indexes, N+1 queries, execution plans, and projections usually produce larger gains than micro-optimizing C#. See DB-008.
 
-- Data is expensive to compute.
-- Staleness is acceptable.
-- Invalidation strategy exists.
+## Cache Intentionally
 
-Caching without invalidation is a correctness risk.
-
----
-
-# Rule PERF-015 — Benchmark Significant Changes
-
-Use BenchmarkDotNet for critical performance decisions.
-
-Benchmark representative workloads.
-
-Avoid synthetic conclusions.
+Cache only when data is expensive to compute, staleness is acceptable, and an invalidation strategy exists. Caching without invalidation is a correctness risk, not a performance win.
 
 ---
 

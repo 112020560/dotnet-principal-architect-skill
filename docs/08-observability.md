@@ -11,6 +11,8 @@ This document defines engineering rules for implementing observability in modern
 
 Observability is a first-class architectural concern and enables teams to understand system behavior without modifying code.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Observability Principles
@@ -24,9 +26,27 @@ Observability is a first-class architectural concern and enables teams to unders
 
 ---
 
-# Rule OBS-001 — Every Request Must Be Traceable
+# Rule OBS-001 — Use Structured Logging
 
 **Severity:** Critical
+
+Avoid string concatenation. Prefer named properties.
+
+Good:
+
+```
+logger.LogInformation("Customer {CustomerId} approved.", id);
+```
+
+Bad:
+
+```
+logger.LogInformation($"Customer {id} approved.");
+```
+
+---
+
+# Rule OBS-002 — Include Correlation Identifiers
 
 Every inbound request should have a correlation identifier.
 
@@ -40,55 +60,11 @@ Support application identifiers such as:
 - X-Trace-Id
 - X-Correlation-Id
 
----
-
-# Rule OBS-002 — Use Structured Logging
-
-Avoid string concatenation.
-
-Prefer named properties.
-
-Good:
-
-logger.LogInformation("Customer {CustomerId} approved.", id);
-
-Bad:
-
-logger.LogInformation($"Customer {id} approved.");
+Related Rules: HTTP (correlation propagation), MSG-008.
 
 ---
 
-# Rule OBS-003 — Log Meaningful Events
-
-Logs should describe:
-
-- Business events
-- State transitions
-- External communication
-- Failures
-- Retries
-
-Avoid noisy logs with little operational value.
-
----
-
-# Rule OBS-004 — Do Not Log Sensitive Data
-
-Never log:
-
-- Passwords
-- Secrets
-- JWT tokens
-- OTP values
-- CVV
-- Full PAN
-- Private keys
-
-Mask or omit sensitive values.
-
----
-
-# Rule OBS-005 — Metrics Measure System Health
+# Rule OBS-003 — Capture Meaningful Metrics
 
 Capture metrics for:
 
@@ -103,7 +79,25 @@ Metrics should support dashboards and alerting.
 
 ---
 
-# Rule OBS-006 — Distributed Tracing Is Mandatory for Distributed Systems
+# Rule OBS-004 — Never Log Secrets or Sensitive Data
+
+Never log:
+
+- Passwords
+- Secrets
+- JWT tokens
+- OTP values
+- CVV
+- Full PAN
+- Private keys
+
+Mask or omit sensitive values.
+
+Related Rules: SEC-004, HTTP-009.
+
+---
+
+# Rule OBS-005 — Emit Traces Across Distributed Systems
 
 Trace requests across:
 
@@ -112,111 +106,53 @@ Trace requests across:
 - Databases
 - Background workers
 
-Prefer OpenTelemetry.
+Distributed tracing is mandatory once a request crosses more than one process.
 
 ---
 
-# Rule OBS-007 — Instrument External Dependencies
+# Rule OBS-006 — Adopt OpenTelemetry as the Standard
 
-Capture telemetry for:
+Logs answer "what happened," metrics answer "how often," and traces answer "where it happened" — use all three together instead of relying on logs alone.
 
-- HTTP
-- RabbitMQ
-- Kafka
-- Redis
-- SQL
-- gRPC
-
-Dependency failures should be visible.
+Prefer OpenTelemetry as the vendor-neutral standard for producing and exporting all three, so the chosen backend (Prometheus, Grafana, Jaeger, Seq, or a cloud-native equivalent) stays replaceable.
 
 ---
 
-# Rule OBS-008 — Errors Must Include Context
+# Additional Engineering Guidance
 
-Log:
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-- Correlation ID
-- Operation
-- Dependency
-- Duration
-- Exception type
+## Log Meaningful Events
 
-Avoid logging only exception messages.
+Logs should describe business events, state transitions, external communication, failures, and retries. Avoid noisy logs with little operational value.
 
----
+## Instrument External Dependencies
 
-# Rule OBS-009 — Health Checks Reflect Operational Readiness
+Capture telemetry for HTTP, RabbitMQ, Kafka, Redis, SQL, and gRPC — dependency failures should be visible, not inferred from downstream symptoms.
 
-Separate:
+## Errors Must Include Context
 
-- Liveness
-- Readiness
+Log correlation ID, operation, dependency, duration, and exception type. Avoid logging only the exception message.
 
-Include critical dependencies only where appropriate.
+## Health Checks Reflect Operational Readiness
 
----
+Separate liveness from readiness, and include only genuinely critical dependencies. See CLOUD-004, API-009's related guidance.
 
-# Rule OBS-010 — Logs, Metrics and Traces Must Work Together
+## Telemetry Should Be Configurable
 
-Logs answer:
+Allow log levels and exporters to change without code modification, to support different production environments.
 
-"What happened?"
+## Alert on Symptoms, Not Events
 
-Metrics answer:
+Prefer alerts on error rate, latency, saturation, and availability over alerting on every individual exception — alert fatigue erodes the value of alerting.
 
-"How often?"
+## Business Events Are Observable
 
-Traces answer:
+Important business actions should generate telemetry (customer created, loan approved, payment completed). See MSG-009.
 
-"Where did it happen?"
+## Sampling Must Be Intentional
 
-Use all three together.
-
----
-
-# Rule OBS-011 — Telemetry Should Be Configurable
-
-Allow log levels and exporters to change without code modifications.
-
-Support different production environments.
-
----
-
-# Rule OBS-012 — Alert on Symptoms, Not Events
-
-Prefer alerts on:
-
-- Error rate
-- Latency
-- Saturation
-- Availability
-
-Avoid alerting on every exception.
-
----
-
-# Rule OBS-013 — Business Events Are Observable
-
-Important business actions should generate telemetry.
-
-Examples:
-
-- Customer created
-- Loan approved
-- Payment completed
-- OTP validated
-
----
-
-# Rule OBS-014 — Sampling Must Be Intentional
-
-Sampling reduces telemetry cost.
-
-Document:
-
-- Sampling strategy
-- Sampling rate
-- Critical flows excluded from sampling
+Document the sampling strategy, sampling rate, and any critical flows explicitly excluded from sampling.
 
 ---
 

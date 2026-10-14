@@ -11,6 +11,8 @@ This document defines engineering rules for designing, implementing and reviewin
 
 Testing is an engineering practice that enables teams to evolve software safely while reducing production risk.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Testing Principles
@@ -39,7 +41,7 @@ Do not rely exclusively on one category.
 
 ---
 
-# Rule TEST-002 — Test Business Behavior
+# Rule TEST-002 — Test Behavior Rather Than Implementation
 
 Tests should validate observable business outcomes.
 
@@ -76,7 +78,7 @@ Avoid mocking your own repositories, domain services or business rules unless is
 
 ---
 
-# Rule TEST-005 — Testcontainers Are Preferred for Infrastructure Tests
+# Rule TEST-005 — Prefer Testcontainers for Infrastructure Tests
 
 Whenever practical, run:
 
@@ -92,7 +94,7 @@ Production-like environments improve confidence.
 
 ---
 
-# Rule TEST-006 — Deterministic Tests Are Mandatory
+# Rule TEST-006 — Tests Must Be Deterministic
 
 Tests should produce the same result regardless of:
 
@@ -105,7 +107,7 @@ Eliminate flaky tests immediately.
 
 ---
 
-# Rule TEST-007 — Keep Tests Independent
+# Rule TEST-007 — Tests Must Be Independent
 
 Each test should prepare and clean up its own state.
 
@@ -113,7 +115,7 @@ Avoid hidden dependencies between tests.
 
 ---
 
-# Rule TEST-008 — Arrange, Act, Assert
+# Rule TEST-008 — Follow Arrange-Act-Assert
 
 Prefer the AAA structure.
 
@@ -121,37 +123,17 @@ Readable tests are easier to maintain.
 
 ---
 
-# Rule TEST-009 — Code Coverage Is a Metric, Not a Goal
+# Rule TEST-009 — Coverage Is a Metric, Not a Goal
 
 High coverage does not imply high quality.
 
 Low coverage does not necessarily indicate poor quality.
 
-Evaluate:
-
-- Critical business flows
-- Risk
-- Confidence
-
-before pursuing coverage percentages.
+Evaluate critical business flows, risk, and confidence before pursuing coverage percentages.
 
 ---
 
-# Rule TEST-010 — Contract Tests Protect Integrations
-
-For distributed systems consider contract testing.
-
-Verify:
-
-- Requests
-- Responses
-- Message contracts
-
-Prevent accidental breaking changes.
-
----
-
-# Rule TEST-011 — Test Failure Scenarios
+# Rule TEST-010 — Validate Failure Scenarios
 
 Validate:
 
@@ -165,50 +147,29 @@ Happy-path testing alone is insufficient.
 
 ---
 
-# Rule TEST-012 — Builders Improve Readability
+# Additional Engineering Guidance
 
-Prefer:
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-- Test Data Builders
-- Object Mothers (when appropriate)
-- AutoFixture
+## Contract Tests Protect Integrations
 
-Avoid large object initialization blocks in every test.
+For distributed systems, consider contract testing to verify requests, responses, and message contracts, preventing accidental breaking changes. Related to TEST-003.
 
----
+## Builders Improve Readability
 
-# Rule TEST-013 — Assertions Should Explain Intent
+Prefer Test Data Builders, Object Mothers (when appropriate), or AutoFixture over large object initialization blocks in every test.
 
-Prefer expressive assertion libraries.
+## Assertions Should Explain Intent
 
-Examples:
+Prefer expressive assertion libraries (FluentAssertions, Shouldly) that communicate expected behavior.
 
-- FluentAssertions
-- Shouldly
+## Background Services Require Dedicated Tests
 
-Assertions should communicate expected behavior.
+Validate startup, cancellation, retry behavior, message handling, and scheduling — hosted services are production code. See API-009.
 
----
+## Tests Are Part of the Architecture
 
-# Rule TEST-014 — Background Services Require Dedicated Tests
-
-Validate:
-
-- Startup
-- Cancellation
-- Retry behavior
-- Message handling
-- Scheduling
-
-Hosted services are production code.
-
----
-
-# Rule TEST-015 — Tests Are Part of the Architecture
-
-Testing strategy should evolve with the architecture.
-
-Review tests with the same rigor as production code.
+Testing strategy should evolve with the architecture. Review tests with the same rigor as production code.
 
 ---
 

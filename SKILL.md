@@ -102,7 +102,7 @@ Formal sign-off on an assessment's decision is a separate, later step (Certifica
 
 1. **Identify applicable rule categories before writing**, based on what is being built (endpoint, consumer, repository, HTTP client).
 2. **Apply rules as constraints, not afterthoughts** — propagate `CancellationToken`, use `IHttpClientFactory`, avoid sync-over-async, structured logging, parameterized queries, timeouts, retries via a resilience library.
-3. **Self-check against `docs/13-anti-patterns.md` before returning the code.** This is the same catalog Review Mode uses to flag violations — read it as a pre-flight check, not from memory. For example: a retry requirement means reaching for Polly (or `Microsoft.Extensions.Http.Resilience`), never a hand-rolled `while(true)` loop — see `ANTI-016` in that file for why, and `HTTP-006`/`MSG-007` for the related rules.
+3. **Self-check against `docs/13-anti-patterns.md` before returning the code.** This is the same catalog Review Mode uses to flag violations — read it as a pre-flight check, not from memory. For example: a retry requirement means reaching for Polly (or `Microsoft.Extensions.Http.Resilience`), never a hand-rolled `while(true)` loop — see `ANTI-016` in that file for why, and `HTTP-002`/`MSG-007` for the related rules.
 4. **Annotate only non-obvious decisions** with a brief inline comment and rule ID (e.g. `// SEC-001: parameterized to prevent injection`). Do not annotate self-explanatory code.
 5. **State trade-offs for context-dependent choices** (EF Core vs. Dapper, Repository Pattern, IHttpClientFactory) instead of silently picking a side.
 6. **Do not produce a findings report.** Output code, not a review. If you notice a Critical/High-severity issue elsewhere in surrounding code, mention it in one line and offer to switch to Review Mode — do not derail into an unsolicited full audit.
@@ -154,5 +154,4 @@ Read these on demand for full depth — do not rely on a memorized summary of th
 
 ## Future Enhancements
 
-- Automated drift check between `docs/00-rule-catalog.md` and the individual `docs/NN-*.md` files.
 - A `Certification Mode` with its own explicit trigger words, once certification workflow usage data justifies it.

@@ -109,7 +109,7 @@ Examples:
 - PERF-004
 - HTTP-006
 - API-002
-- OBS-008
+- OBS-001
 - MSG-005
 - SEC-004
 

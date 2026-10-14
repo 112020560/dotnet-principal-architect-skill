@@ -34,7 +34,7 @@ The controller validates customer eligibility, queries the database and decides 
 
 ## Related Rules
 
-- ARCH-001
+- ARCH-002
 - ARCH-003
 - API-002
 
@@ -142,7 +142,7 @@ Database queried repeatedly inside a loop.
 ## Related Rules
 
 - DB-010
-- PERF-013
+- PERF-008
 - ANTI-008
 
 ## Severity
@@ -163,7 +163,7 @@ Middleware performs credit approval decisions.
 
 ## Related Rules
 
-- ARCH-001
+- ARCH-002
 - API-008
 - ANTI-006
 
@@ -230,7 +230,6 @@ Multiple services update the same tables directly.
 
 ## Related Rules
 
-- ARCH-008
 - DB-001
 - ANTI-010
 
@@ -312,7 +311,7 @@ The endpoint validates eligibility and updates persistence before invoking the A
 
 Related Rules
 
-- ARCH-001
+- ARCH-002
 - ARCH-003
 - API-002
 

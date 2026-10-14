@@ -151,7 +151,10 @@ templates/      Blank starters for each document type
 prompts/        Cursor rule, plus the meta-prompt used to build this framework
 examples/       Ready-to-paste usage prompts covering all operating modes
 framework/      Authoritative framework specification and task board
+scripts/        Maintenance tooling (read-only consistency audit)
 ```
+
+Before committing changes to any rule, run `python3 scripts/check-consistency.py`. It is read-only and fails if the catalog and the rule docs disagree, if any file cites a rule ID that doesn't exist, or if two templates are identical copies.
 
 `install.sh` copies `SKILL.md` and every reference directory above it into `.claude/skills/principal-dotnet-architect/` in the target project — nothing is summarized or rewritten in transit. `framework/`, `examples/`, and `prompts/framework-builder.md` stay behind; they're for maintaining this repo, not for the projects that consume it.
 

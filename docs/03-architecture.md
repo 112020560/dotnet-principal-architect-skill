@@ -14,6 +14,8 @@ The goal is not to enforce a specific architectural style.
 
 The goal is to evaluate whether an architecture is appropriate, maintainable, scalable, and aligned with business requirements.
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Architecture Principles
@@ -28,26 +30,40 @@ Every architectural recommendation must preserve the principles defined in **01-
 
 ---
 
-# Rule ARCH-001 — Business Logic Must Not Live Outside the Domain or Application Layer
+# Rule ARCH-001 — Domain Is Independent From Infrastructure
 
 ## Severity
 
 Critical
 
-## Applies To
+## Motivation
 
-- ASP.NET Core
-- Hexagonal Architecture
-- Clean Architecture
-- Onion Architecture
-- Vertical Slice Architecture
-- DDD
+Domain entities and business rules should remain independent of persistence frameworks, transport libraries, and other infrastructure concerns. The Domain is the most durable layer of the system; infrastructure changes far more often.
+
+## Bad
+
+- Domain entities implementing `IEntityTypeConfiguration`, `IDataReader`, `DbContext`, repository logic, or serialization concerns.
+- Domain referencing Entity Framework Core, ASP.NET Core, RabbitMQ, Serilog, Redis, or `HttpClient` directly.
+
+## Good
+
+A Domain project with zero package references to infrastructure or framework libraries.
+
+## Exceptions
+
+Shared abstractions that represent business concepts (e.g., a `Money` value object with no framework dependency) are acceptable.
+
+---
+
+# Rule ARCH-002 — Business Rules Belong to the Domain
+
+## Severity
+
+Critical
 
 ## Motivation
 
-Business rules are the most valuable asset of any software system.
-
-They must remain independent from frameworks, transport protocols, persistence technologies, and infrastructure concerns.
+Business rules are the most valuable asset of any software system. They must remain independent from frameworks, transport protocols, persistence technologies, and infrastructure concerns.
 
 ## Problem
 
@@ -83,52 +99,7 @@ Moving business logic into the Domain may require additional abstractions but si
 
 ---
 
-# Rule ARCH-002 — Dependencies Must Always Point Toward the Business
-
-## Severity
-
-Critical
-
-## Applies To
-
-All architectures.
-
-## Motivation
-
-Business rules should never depend on infrastructure.
-
-Infrastructure should depend on business rules.
-
-## Problem
-
-When the Domain references EF Core, ASP.NET Core, RabbitMQ, Serilog, or other infrastructure libraries, business logic becomes tightly coupled to implementation details.
-
-## Good
-
-Infrastructure depends on Application.
-
-Application depends on Domain.
-
-Domain depends on nothing.
-
-## Bad
-
-Domain referencing:
-
-- Entity Framework Core
-- ASP.NET Core
-- RabbitMQ
-- Serilog
-- Redis
-- HttpClient
-
-## Exceptions
-
-Shared abstractions that represent business concepts are acceptable.
-
----
-
-# Rule ARCH-003 — Controllers and Endpoints Must Remain Thin
+# Rule ARCH-003 — Business Logic Is Isolated From Transport and Persistence
 
 ## Severity
 
@@ -136,13 +107,11 @@ High
 
 ## Motivation
 
-Controllers are transport adapters.
-
-Their responsibility is receiving requests and returning responses.
+Controllers, endpoints, and persistence adapters are transport/technology boundaries. Their responsibility is receiving input and returning output — not deciding business outcomes.
 
 ## Responsibilities
 
-Controllers should only:
+Controllers and endpoints should only:
 
 - Validate transport data
 - Delegate work
@@ -159,9 +128,13 @@ They should never:
 
 Thin controllers increase the number of application classes but dramatically improve separation of concerns.
 
+## Related Rules
+
+API-002 restates this rule from the ASP.NET Core surface specifically.
+
 ---
 
-# Rule ARCH-004 — The Application Layer Orchestrates Use Cases
+# Rule ARCH-004 — Domain Models Represent Business Concepts
 
 ## Severity
 
@@ -169,9 +142,56 @@ High
 
 ## Motivation
 
-Application Services coordinate work.
+Entities, Value Objects, and Aggregates should model real business concepts and enforce invariants — not merely mirror database tables as data bags.
 
-They do not implement business rules.
+## Good
+
+- `LoanApplication.Approve()` encapsulating the approval invariant inside the entity.
+- `Money`, `EmailAddress` as Value Objects that validate themselves on construction.
+
+## Bad
+
+Anemic entities with public setters and no behavior, where all decision logic lives in external services instead of the model itself.
+
+## Trade-offs
+
+Rich domain models take more upfront design but prevent invariants from being scattered and duplicated across the codebase.
+
+---
+
+# Rule ARCH-005 — Domain Services Are Cohesive and Business-Oriented
+
+## Severity
+
+Medium
+
+## Motivation
+
+A Domain Service should coordinate a single, well-named business operation — not accumulate unrelated responsibilities over time.
+
+## Bad
+
+A service that grows a new method for every unrelated feature request until it depends on a dozen unrelated collaborators.
+
+## Good
+
+Services named and scoped around one business capability (e.g., `LoanApprovalService`, not `LoanService` that also sends notifications and generates reports).
+
+## Related Rules
+
+ANTI-002 (God Service).
+
+---
+
+# Rule ARCH-006 — Application Layer Orchestrates Business Use Cases
+
+## Severity
+
+High
+
+## Motivation
+
+Application Services coordinate work. They do not implement business rules.
 
 ## Responsibilities
 
@@ -187,134 +207,11 @@ They should not contain business rules that belong to the domain model.
 
 ## Notes
 
-Application is an orchestrator.
-
-The Domain is the decision maker.
+Application is an orchestrator. The Domain is the decision maker.
 
 ---
 
-# Rule ARCH-005 — Repositories Represent Business Intent
-
-## Severity
-
-High
-
-## Motivation
-
-Repositories exist to express persistence operations using the language of the business.
-
-## Good
-
-Examples:
-
-- GetActiveCustomer()
-- ExistsByIdentification()
-- FindPendingApplication()
-
-## Avoid
-
-Generic repositories that expose persistence mechanics instead of business intent.
-
-Examples:
-
-- GetAll()
-- Find()
-- Query()
-
-## Exceptions
-
-Generic repositories may be acceptable for internal infrastructure utilities.
-
----
-
-# Rule ARCH-006 — Domain Models Must Not Leak Infrastructure
-
-## Severity
-
-Critical
-
-## Motivation
-
-Business entities should remain independent of persistence frameworks.
-
-## Avoid
-
-Domain entities implementing:
-
-- IEntityTypeConfiguration
-- IDataReader
-- DbContext
-- Repository logic
-- Serialization concerns
-
-Avoid persistence-specific attributes when possible.
-
-## Goal
-
-A domain model should be reusable regardless of the persistence technology.
-
----
-
-# Rule ARCH-007 — Architectural Boundaries Must Be Explicit
-
-## Severity
-
-High
-
-## Motivation
-
-Every architectural boundary should have a clearly defined responsibility.
-
-Typical boundaries include:
-
-- Presentation
-- Application
-- Domain
-- Infrastructure
-
-Each layer should expose only what the next layer requires.
-
-Avoid leaking implementation details across boundaries.
-
----
-
-# Rule ARCH-008 — Architecture Must Follow Business Boundaries
-
-## Severity
-
-High
-
-## Motivation
-
-Business capabilities define architectural boundaries.
-
-Technology should never define service boundaries.
-
-## Good
-
-Services organized around business capabilities.
-
-Examples:
-
-- CRM
-- Payments
-- Credit
-- Identity
-- Notifications
-
-## Avoid
-
-Services organized around technologies.
-
-Examples:
-
-- Database Service
-- Logging Service
-- EF Core Service
-
----
-
-# Rule ARCH-009 — Prefer Simplicity Until Complexity Is Justified
+# Rule ARCH-007 — Commands and Queries Have a Single Responsibility
 
 ## Severity
 
@@ -322,23 +219,23 @@ Medium
 
 ## Motivation
 
-Architecture should evolve together with the business.
+A command or query handler should express one business intent, so handlers stay testable and changes stay localized to the use case they affect.
 
-Avoid introducing complexity before it becomes necessary.
+## Bad
 
-Examples include:
+A single handler that branches on a "mode" or "type" parameter to perform several unrelated operations.
 
-- CQRS
-- Event Sourcing
-- Microservices
-- Saga orchestration
-- Distributed transactions
+## Good
 
-These are powerful techniques but should only be introduced when justified by measurable business or technical requirements.
+One handler per use case, named after the business intent (`ApproveLoanCommandHandler`, not a generic `LoanCommandHandler`).
+
+## Exceptions
+
+Small CRUD services may share a thin generic handler when there is no meaningful per-case business logic.
 
 ---
 
-# Rule ARCH-010 — Every Architectural Decision Must Be Justifiable
+# Rule ARCH-008 — Dependencies Point Inward
 
 ## Severity
 
@@ -346,19 +243,151 @@ Critical
 
 ## Motivation
 
-Architecture is a sequence of engineering decisions.
+Business rules should never depend on infrastructure. Infrastructure should depend on business rules.
 
-Every significant decision should be explainable.
+## Problem
 
-Questions every architect should be able to answer:
+When the Domain references EF Core, ASP.NET Core, RabbitMQ, Serilog, or other infrastructure libraries, business logic becomes tightly coupled to implementation details.
 
-- Why was this decision made?
-- Which alternatives were considered?
-- What trade-offs exist?
-- What problem does this solve?
-- What evidence supports this choice?
+## Good
 
-If these questions cannot be answered, the decision should be reconsidered.
+- Infrastructure depends on Application.
+- Application depends on Domain.
+- Domain depends on nothing.
+
+## Bad
+
+Domain referencing Entity Framework Core, ASP.NET Core, RabbitMQ, Serilog, Redis, or `HttpClient`.
+
+## Exceptions
+
+Shared abstractions that represent business concepts are acceptable.
+
+---
+
+# Rule ARCH-009 — Depend on Abstractions, Not Implementations
+
+## Severity
+
+High
+
+## Motivation
+
+Application and Domain code should depend on interfaces (ports) owned by the business, not on concrete infrastructure classes.
+
+## Good
+
+`IOrderRepository` defined in Application/Domain, implemented by a concrete class in Infrastructure.
+
+## Bad
+
+Application code instantiating a concrete `SqlOrderRepository`, `HttpClient`, or a specific message-broker client directly.
+
+## Trade-offs
+
+Introduces an interface per dependency — justified when the implementation is genuinely replaceable or needs to be faked in tests.
+
+---
+
+# Rule ARCH-010 — Infrastructure Implements Abstractions Only
+
+## Severity
+
+Medium
+
+## Motivation
+
+Infrastructure projects should contain adapters that implement ports defined by Application/Domain — not their own parallel business logic or a public API surface the rest of the system depends on directly.
+
+## Bad
+
+Other layers referencing concrete Infrastructure classes instead of the abstraction; Infrastructure exposing helper methods that encode business decisions.
+
+## Good
+
+Infrastructure types are only ever referenced through their interface, wired up at the composition root (DI container).
+
+---
+
+# Rule ARCH-011 — Persistence Is Isolated Behind Ports or Repositories
+
+## Severity
+
+High
+
+## Motivation
+
+Repositories exist to express persistence operations using the language of the business, and to isolate the rest of the system from the specific persistence technology.
+
+## Good
+
+Examples:
+
+- `GetActiveCustomer()`
+- `ExistsByIdentification()`
+- `FindPendingApplication()`
+
+## Avoid
+
+Generic repositories that expose persistence mechanics instead of business intent:
+
+- `GetAll()`
+- `Find()`
+- `Query()`
+
+## Exceptions
+
+Generic repositories may be acceptable for internal infrastructure utilities.
+
+## Related Rules
+
+DB-006, DB-007.
+
+---
+
+# Rule ARCH-012 — Infrastructure Contains No Business Rules
+
+## Severity
+
+Critical
+
+## Motivation
+
+Infrastructure (persistence, messaging, HTTP clients, background hosts) must execute decisions — it must not make them.
+
+## Problem
+
+Database triggers or stored procedures encoding business rules; HTTP client wrappers that decide whether to call an external system based on business state; hosted services that decide business outcomes instead of just orchestrating a decision already made.
+
+## Good
+
+Infrastructure receives a decision and executes it (save, send, call). Domain/Application made the decision.
+
+## Bad
+
+A background worker or repository implementation branching on business status to decide whether an action is allowed.
+
+## Related Rules
+
+ANTI-006 (Business Logic in Middleware), ANTI-007 (Business Logic in Background Services).
+
+---
+
+# Additional Engineering Guidance
+
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
+
+## Architecture Must Follow Business Boundaries
+
+Business capabilities define architectural boundaries (CRM, Payments, Credit, Identity), not technology (Database Service, Logging Service). Services organized around technology tend to require cross-service coordination for every business change.
+
+## Prefer Simplicity Until Complexity Is Justified
+
+Avoid introducing CQRS, Event Sourcing, microservices, Saga orchestration, or distributed transactions before they are justified by a measurable business or technical requirement. See ANTI-013 (Overengineering).
+
+## Every Architectural Decision Must Be Justifiable
+
+Every significant decision should be explainable: why it was made, what alternatives were considered, what trade-offs exist, and what evidence supports the choice. If these questions cannot be answered, reconsider the decision.
 
 ---
 

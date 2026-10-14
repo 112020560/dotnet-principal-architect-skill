@@ -13,6 +13,8 @@ The goal is to provide objective guidance for designing, reviewing, and optimizi
 
 These rules apply regardless of the underlying database engine (PostgreSQL, SQL Server, MySQL, Oracle, etc.).
 
+Rule IDs and descriptions in this document must always match `docs/00-rule-catalog.md` exactly — if a number here does not match the catalog, the catalog wins and this file has drifted.
+
 ---
 
 # Guiding Principles
@@ -26,7 +28,7 @@ These rules apply regardless of the underlying database engine (PostgreSQL, SQL 
 
 ---
 
-# Rule DB-001 — Persistence Must Follow Business Boundaries
+# Rule DB-001 — Every Bounded Context Owns Its Data
 
 **Severity:** Critical
 
@@ -34,26 +36,26 @@ Persistence should respect bounded contexts and aggregate boundaries.
 
 Avoid sharing tables or schemas between unrelated business capabilities.
 
----
-
-# Rule DB-002 — Choose the Right Persistence Technology
-
-**Severity:** Critical
-
-There is no universally correct persistence technology.
-
-Selection should consider:
-
-- Business complexity
-- Query complexity
-- Throughput
-- Team expertise
-- Operational constraints
-- Maintainability
+Related Rules: ARCH-008, ANTI-010.
 
 ---
 
-# Rule DB-003 — Entity Framework Core Is Not the Default Choice
+# Rule DB-002 — Model Aggregates Before Tables
+
+**Severity:** High
+
+Design the Aggregate and its invariants first. Let the table or document schema follow from that model — not the other way around.
+
+Avoid:
+
+- Designing tables first and reverse-engineering entities from columns.
+- Letting a normalized relational schema force an Aggregate boundary that doesn't match the business transaction.
+
+An Aggregate is a consistency boundary; a table is a storage detail.
+
+---
+
+# Rule DB-003 — EF Core Is a Context-Dependent Choice, Not a Default
 
 **Severity:** High
 
@@ -76,13 +78,11 @@ Decision Matrix
 | Extreme Throughput | ⭐⭐☆☆☆ |
 | Bulk Operations | ⭐⭐☆☆☆ |
 
-Engineering Note
-
-EF Core optimizes developer productivity, not raw database throughput.
+EF Core optimizes developer productivity, not raw database throughput. It is never a universal default — see DB-005.
 
 ---
 
-# Rule DB-004 — Dapper Is Not the Default Choice
+# Rule DB-004 — Dapper Is a Deliberate Choice for High-Throughput Reads
 
 **Severity:** High
 
@@ -104,19 +104,17 @@ Decision Matrix
 | High Throughput | ⭐⭐⭐⭐⭐ |
 | Low Allocation | ⭐⭐⭐⭐⭐ |
 
-Engineering Note
-
-Dapper is a micro ORM, not a replacement for domain modeling.
+Dapper is a micro ORM, not a replacement for domain modeling. Choosing it must be justified by a measured workload characteristic, not by default preference.
 
 ---
 
-# Rule DB-005 — EF Core and Dapper Can Coexist
+# Rule DB-005 — Choose the Right Persistence Strategy Per Workload
 
 **Severity:** High
 
-Using both technologies is a mature engineering strategy.
+There is no universally correct persistence technology. Selection should consider business complexity, query complexity, throughput, team expertise, operational constraints, and maintainability.
 
-Typical pattern:
+Using EF Core and Dapper together is a mature engineering strategy, not a compromise:
 
 - Writes → EF Core
 - Reads → Dapper
@@ -133,58 +131,58 @@ Repositories should expose business language.
 
 Prefer:
 
-- ExistsByIdentification()
-- GetPendingLoan()
-- FindActiveCustomer()
+- `ExistsByIdentification()`
+- `GetPendingLoan()`
+- `FindActiveCustomer()`
 
 Avoid:
 
-- GetAll()
-- Query()
-- Find()
+- `GetAll()`
+- `Query()`
+- `Find()`
+
+Related Rules: ARCH-011.
 
 ---
 
-# Rule DB-007 — Never Return IQueryable Outside Infrastructure
+# Rule DB-007 — Avoid Generic Repository Abuse
 
-`IQueryable` leaks persistence concerns into higher layers.
+A generic `IRepository<T>` that exposes `GetAll()`, `Find()`, `Query()`, or a raw `IQueryable` leaks persistence mechanics into higher layers and erases business language.
 
-Expose business operations or materialized results instead.
+`IQueryable` returned outside the Infrastructure layer is the clearest symptom: it lets any caller compose arbitrary queries, bypassing the intent the repository was meant to express.
 
-Exception:
+Exception: generic repositories may be acceptable for internal infrastructure utilities that genuinely have no business-specific behavior.
 
-Internal infrastructure composition.
-
----
-
-# Rule DB-008 — Tracking Must Be Intentional
-
-Enable tracking only when entity state changes are required.
-
-Prefer `AsNoTracking()` for:
-
-- Read models
-- Queries
-- Reporting
-- Dashboards
+Related Rules: ANTI-003.
 
 ---
 
-# Rule DB-009 — Prefer Projection Over Large Entity Graphs
+# Rule DB-008 — Optimize Queries and Indexes Before Scaling Hardware
 
-Prefer:
+Most performance problems originate in SQL, missing indexes, network latency, excessive round-trips, or large payloads — not in CPU or memory capacity.
 
-```csharp
-.Select(x => new CustomerDto(...))
-```
+Review execution plans (scan vs. seek, estimated vs. actual rows, sorts, hash joins) before scaling compute. Evidence precedes optimization.
 
-Instead of loading large graphs with multiple `Include()` calls.
-
-Transfer only the data required.
+Related Rules: PERF-001.
 
 ---
 
-# Rule DB-010 — Avoid N+1 Queries
+# Rule DB-009 — Design Indexes Intentionally
+
+Indexes are part of the system design, not an afterthought.
+
+Review:
+
+- Missing indexes
+- Unused indexes
+- Covering indexes
+- Composite indexes
+
+Always validate using execution plans.
+
+---
+
+# Rule DB-010 — Prevent N+1 Queries
 
 Detect:
 
@@ -198,130 +196,45 @@ Prefer:
 - Explicit loading
 - Batch queries
 
----
-
-# Rule DB-011 — One Transaction Per Business Operation
-
-Transactions should represent business consistency.
-
-Avoid long-running transactions.
-
-Never span user interaction.
+Related Rules: ANTI-008.
 
 ---
 
-# Rule DB-012 — Keep Transactions Short
+# Additional Engineering Guidance
 
-Inside transactions:
+The following guidance is established practice but is not a numbered rule in `docs/00-rule-catalog.md` — do not cite it with a rule ID.
 
-- Validate beforehand
-- Avoid HTTP calls
-- Avoid messaging
-- Avoid user input
+## Tracking Must Be Intentional
 
-Commit as early as safely possible.
+Enable EF Core change tracking only when entity state changes are required. Prefer `AsNoTracking()` for read models, queries, reporting, and dashboards.
 
----
+## Prefer Projection Over Large Entity Graphs
 
-# Rule DB-013 — Use ExecuteUpdate and ExecuteDelete When Appropriate
+Prefer `.Select(x => new CustomerDto(...))` instead of loading large graphs with multiple `Include()` calls. Transfer only the data required.
 
-When aggregates are not required and business rules are unaffected, prefer set-based operations over loading entities.
+## Transactions Represent Business Consistency
 
----
+One transaction per business operation. Validate beforehand, avoid HTTP calls or messaging inside a transaction, avoid waiting on user input, and commit as early as safely possible. Never let a transaction span user interaction.
 
-# Rule DB-014 — Indexes Are Architecture
+## Use Set-Based Operations When Appropriate
 
-Indexes are part of the system design.
+When aggregates are not required and business rules are unaffected, prefer `ExecuteUpdate`/`ExecuteDelete` or other set-based operations over loading entities one by one.
 
-Review:
+## Bulk Operations Must Be Explicit
 
-- Missing indexes
-- Unused indexes
-- Covering indexes
-- Composite indexes
+Bulk inserts, updates, and deletes require dedicated strategies (`COPY` in PostgreSQL, `SqlBulkCopy`, bulk libraries, `ExecuteUpdate`). Avoid entity-by-entity loops for large datasets.
 
-Always validate using execution plans.
+## Read Models Are Different From Aggregates
 
----
+Read models optimize queries; Aggregates enforce business invariants. Do not confuse the two. CQRS is optional but often benefits complex systems once this distinction matters.
 
-# Rule DB-015 — Execution Plans Before Optimization
+## Stored Procedures Are Engineering Decisions
 
-Never optimize SQL based on assumptions.
+Stored procedures are acceptable when they provide measurable value (legacy integration, vendor requirements, complex reporting, batch processing). Avoid ideological positions against them.
 
-Review:
+## Optimistic Concurrency Should Be Preferred
 
-- Execution plan
-- Scan vs Seek
-- Estimated rows
-- Actual rows
-- Sorts
-- Hash joins
-
-Evidence precedes optimization.
-
----
-
-# Rule DB-016 — Bulk Operations Must Be Explicit
-
-Bulk inserts, updates, and deletes require dedicated strategies.
-
-Examples:
-
-- COPY (PostgreSQL)
-- SqlBulkCopy
-- Bulk libraries
-- ExecuteUpdate
-
-Avoid entity-by-entity loops for large datasets.
-
----
-
-# Rule DB-017 — Read Models Are Different From Aggregates
-
-Read models optimize queries.
-
-Aggregates enforce business invariants.
-
-Do not confuse the two.
-
-CQRS is optional but often benefits complex systems.
-
----
-
-# Rule DB-018 — Stored Procedures Are Engineering Decisions
-
-Stored procedures are acceptable when they provide measurable value.
-
-Examples:
-
-- Legacy integration
-- Vendor requirements
-- Complex reporting
-- Batch processing
-
-Avoid ideological positions.
-
----
-
-# Rule DB-019 — Optimistic Concurrency Should Be Preferred
-
-Use optimistic concurrency unless contention measurements justify pessimistic locking.
-
-Protect critical updates with concurrency tokens where appropriate.
-
----
-
-# Rule DB-020 — Measure Database Performance Before Optimizing Code
-
-Most performance problems originate in:
-
-- SQL
-- Missing indexes
-- Network latency
-- Excessive round-trips
-- Large payloads
-
-Optimize the database before micro-optimizing C# code.
+Use optimistic concurrency unless contention measurements justify pessimistic locking. Protect critical updates with concurrency tokens where appropriate.
 
 ---
 

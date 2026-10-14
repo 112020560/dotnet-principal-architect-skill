@@ -75,12 +75,12 @@ Once assigned, they must never be reused for another rule.
 |------|-------------|-----------|
 | DB-001 | Every bounded context owns its data. | docs/04-database.md |
 | DB-002 | Model aggregates before tables. | docs/04-database.md |
-| DB-003 | EF Core is the default ORM. | docs/04-database.md |
-| DB-004 | Use Dapper only when justified. | docs/04-database.md |
+| DB-003 | EF Core is a context-dependent choice, not a default. | docs/04-database.md |
+| DB-004 | Dapper is a deliberate choice for high-throughput reads. | docs/04-database.md |
 | DB-005 | Choose the right persistence strategy per workload. | docs/04-database.md |
 | DB-006 | Repositories express business intent. | docs/04-database.md |
 | DB-007 | Avoid Generic Repository abuse. | docs/04-database.md |
-| DB-008 | Optimize queries before scaling hardware. | docs/04-database.md |
+| DB-008 | Optimize queries and indexes before scaling hardware. | docs/04-database.md |
 | DB-009 | Design indexes intentionally. | docs/04-database.md |
 | DB-010 | Prevent N+1 queries. | docs/04-database.md |
 
@@ -127,13 +127,15 @@ Once assigned, they must never be reused for another rule.
 
 | Rule | Description | Reference |
 |------|-------------|-----------|
-| API-001 | Choose Controllers or Minimal APIs intentionally. | docs/07-aspnet-core.md |
-| API-002 | Controllers remain thin. | docs/07-aspnet-core.md |
+| API-001 | Choose the API style based on service characteristics. | docs/07-aspnet-core.md |
+| API-002 | Controllers and endpoints must stay thin. | docs/07-aspnet-core.md |
 | API-003 | Validation occurs at the application boundary. | docs/07-aspnet-core.md |
 | API-004 | Centralize exception handling. | docs/07-aspnet-core.md |
 | API-005 | Implement RFC 9457 Problem Details. | docs/07-aspnet-core.md |
 | API-006 | Configure Dependency Injection correctly. | docs/07-aspnet-core.md |
 | API-007 | Use the Options Pattern for configuration. | docs/07-aspnet-core.md |
+| API-008 | Middleware owns cross-cutting concerns. | docs/07-aspnet-core.md |
+| API-009 | Background services should be autonomous. | docs/07-aspnet-core.md |
 
 ---
 
@@ -160,6 +162,10 @@ Once assigned, they must never be reused for another rule.
 | MSG-004 | Design for retries. | docs/09-messaging.md |
 | MSG-005 | Use the Outbox Pattern when consistency is required. | docs/09-messaging.md |
 | MSG-006 | Avoid business logic inside consumers. | docs/09-messaging.md |
+| MSG-007 | Retry policies must be intentional. | docs/09-messaging.md |
+| MSG-008 | Preserve correlation across messages. | docs/09-messaging.md |
+| MSG-009 | Prefer business events. | docs/09-messaging.md |
+| MSG-010 | Keep messages small. | docs/09-messaging.md |
 
 ---
 
@@ -174,6 +180,9 @@ Once assigned, they must never be reused for another rule.
 | SEC-005 | Protect sensitive data in transit and at rest. | docs/10-security.md |
 | SEC-006 | Fail securely. | docs/10-security.md |
 | SEC-007 | Authorization must be explicit. | docs/10-security.md |
+| SEC-008 | Protect against injection. | docs/10-security.md |
+| SEC-009 | Dependencies must be maintained. | docs/10-security.md |
+| SEC-010 | Rate limiting protects availability. | docs/10-security.md |
 
 ---
 
@@ -193,7 +202,7 @@ Once assigned, they must never be reused for another rule.
 
 | Rule | Description | Reference |
 |------|-------------|-----------|
-| TEST-001 | Balance the testing strategy. | docs/12-testing.md |
+| TEST-001 | Build a balanced test strategy. | docs/12-testing.md |
 | TEST-002 | Test behavior rather than implementation. | docs/12-testing.md |
 | TEST-003 | Prefer integration tests for business flows. | docs/12-testing.md |
 | TEST-004 | Mock only true external dependencies. | docs/12-testing.md |
@@ -220,7 +229,7 @@ Once assigned, they must never be reused for another rule.
 | ANTI-008 | N+1 Queries. | docs/13-anti-patterns.md |
 | ANTI-009 | Chatty APIs. | docs/13-anti-patterns.md |
 | ANTI-010 | Shared Database Between Services. | docs/13-anti-patterns.md |
-| ANTI-011 | Logging Sensitive Information. | docs/13-anti-patterns.md |
+| ANTI-011 | Logging Sensitive Data. | docs/13-anti-patterns.md |
 | ANTI-012 | Premature Optimization. | docs/13-anti-patterns.md |
 | ANTI-013 | Overengineering. | docs/13-anti-patterns.md |
 | ANTI-014 | DTO Explosion. | docs/13-anti-patterns.md |

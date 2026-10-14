@@ -1,21 +1,21 @@
-# Security Compliance Review
+# Cloud & Infrastructure Compliance Review
 
-> Evaluate the security posture of a software solution against the Principal .NET Architect Engineering Standard.
+> Evaluate the cloud-native readiness of a software solution against the Principal .NET Architect Engineering Standard.
 
 ---
 
 # Purpose
 
-This review evaluates the security capabilities of a software solution throughout its architecture, implementation, deployment, and operation.
+This review evaluates how well a software solution is designed, deployed, and operated as a cloud-native system — statelessness, configuration management, scalability, health, and resiliency.
 
 Its objectives are to:
 
 - Verify compliance with the Engineering Standard.
-- Evaluate identity and access management.
-- Assess data protection.
-- Review API and infrastructure security.
-- Evaluate secure development practices.
-- Assess operational security readiness.
+- Evaluate statelessness and configuration management.
+- Assess horizontal scalability and elasticity.
+- Review health check and resiliency design.
+- Evaluate infrastructure automation and reproducibility.
+- Assess operational cost awareness.
 - Capture engineering decisions and trade-offs.
 
 This review verifies compliance.
@@ -32,17 +32,18 @@ All referenced rules are defined in:
 
 This review evaluates:
 
-- Identity
-- Authentication
-- Authorization
-- Secrets Management
-- Data Protection
-- API Security
-- Infrastructure Security
-- Secure Development
-- Supply Chain Security
-- Monitoring & Detection
-- Incident Response
+- Statelessness
+- Configuration Management
+- Horizontal Scalability
+- Health Checks
+- Resiliency
+- Infrastructure as Code
+- Container Practices
+- Secrets in Deployment
+- Cost Awareness
+- Cloud Portability
+
+This review applies equally to Azure, AWS, Google Cloud, and private Kubernetes environments — it is vendor-neutral by design.
 
 ---
 
@@ -56,21 +57,21 @@ This review evaluates:
 | Commit | |
 | Reviewer | |
 | Review Date | |
-| Security Standard | |
+| Cloud Provider(s) | |
 | Review Scope | |
 
 ---
 
 # Executive Summary
 
-Summarize the overall security posture.
+Summarize the overall cloud-native maturity of the solution.
 
 Include:
 
 - Main strengths.
 - Main weaknesses.
-- Highest security risks.
-- Operational concerns.
+- Highest operational risks.
+- Cost concerns.
 - Recommended priorities.
 
 ---
@@ -86,20 +87,15 @@ Include:
 
 ---
 
-# Security Compliance Review
+# Cloud Compliance Review
 
 | Compliance | Rule | Evidence | Notes |
 |------------|------|----------|-------|
-| | SEC-001 | | |
-| | SEC-002 | | |
-| | SEC-003 | | |
-| | SEC-004 | | |
-| | SEC-005 | | |
-| | SEC-006 | | |
-| | SEC-007 | | |
-| | SEC-008 | | |
-| | SEC-009 | | |
-| | SEC-010 | | |
+| | CLOUD-001 | | |
+| | CLOUD-002 | | |
+| | CLOUD-003 | | |
+| | CLOUD-004 | | |
+| | CLOUD-005 | | |
 
 ---
 
@@ -125,248 +121,161 @@ Answers do not affect the Compliance Score.
 
 ---
 
-# Identity & Authentication
+# Statelessness
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Is authentication centralized? | | | |
-| Is MFA enforced where appropriate? | | | |
-| Is OAuth2/OpenID Connect implemented correctly? | | | |
-| Are refresh tokens protected? | | | |
-| Are machine identities managed securely? | | | |
-| Are authentication failures monitored? | | | |
+| Can any instance be terminated without data loss? | | | |
+| Is session state stored externally (cache, database)? | | | |
+| Are local files avoided as the source of truth? | | | |
+| Can the application scale out without sticky sessions? | | | |
 
 ---
 
-# Authorization
+# Configuration Management
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Is authorization enforced server-side? | | | |
-| Is Least Privilege applied? | | | |
-| Are permissions centrally managed? | | | |
-| Are authorization policies reusable? | | | |
-| Is privilege escalation prevented? | | | |
+| Is configuration externalized from code? | | | |
+| Can configuration change without recompilation? | | | |
+| Is configuration validated at startup? | | | |
+| Are per-environment settings isolated? | | | |
 
 ---
 
-# Secrets Management
+# Horizontal Scalability
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Are secrets stored outside source code? | | | |
-| Is a centralized secrets manager used? | | | |
-| Are secrets rotated periodically? | | | |
-| Are certificates managed securely? | | | |
-| Are connection strings protected? | | | |
+| Does the service scale out rather than only up? | | | |
+| Is autoscaling configured based on real signals (CPU, queue depth, latency)? | | | |
+| Are shared in-memory caches avoided as a scaling blocker? | | | |
+| Has the service been load-tested at target scale? | | | |
 
 ---
 
-# Data Protection
+# Health Checks & Resiliency
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Is encryption applied at rest? | | | |
-| Is TLS enforced in transit? | | | |
-| Is sensitive data minimized? | | | |
-| Is PII identified and protected? | | | |
-| Are encryption keys managed securely? | | | |
-| Is data classification documented? | | | |
+| Are liveness and readiness probes separated? | | | |
+| Do health checks reflect real dependency health? | | | |
+| Does the application degrade gracefully on dependency failure? | | | |
+| Is redundancy used where business continuity requires it? | | | |
 
 ---
 
-# API Security
+# Infrastructure & Deployment
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Is input validation implemented? | | | |
-| Is output encoding applied where appropriate? | | | |
-| Is CORS configured correctly? | | | |
-| Are security headers configured? | | | |
-| Is rate limiting implemented? | | | |
-| Are request size limits configured? | | | |
+| Is infrastructure defined as code? | | | |
+| Are deployments automated and repeatable? | | | |
+| Are containers immutable once built? | | | |
+| Can a deployment be rolled back automatically? | | | |
 
 ---
 
-# Infrastructure Security
+# Secrets & Identity in Deployment
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Are containers scanned regularly? | | | |
-| Is Least Privilege applied to infrastructure? | | | |
-| Are unnecessary ports closed? | | | |
-| Are network boundaries enforced? | | | |
-| Are runtime permissions minimized? | | | |
+| Are secrets absent from container images? | | | |
+| Is identity-based authentication used between services? | | | |
+| Are long-lived credentials minimized? | | | |
 
 ---
 
-# Secure Development
+# Cost Awareness
 
 | Question | Answer | Why? | Notes |
 |----------|--------|------|-------|
-| Are code reviews mandatory? | | | |
-| Is static code analysis executed? | | | |
-| Are secrets scanned before merge? | | | |
-| Are dependency vulnerabilities reviewed? | | | |
-| Is threat modeling considered during design? | | | |
-
----
-
-# Supply Chain Security
-
-| Question | Answer | Why? | Notes |
-|----------|--------|------|-------|
-| Are third-party dependencies monitored? | | | |
-| Is Software Composition Analysis performed? | | | |
-| Is an SBOM generated? | | | |
-| Are package signatures verified when applicable? | | | |
-| Is a dependency update policy defined? | | | |
-
----
-
-# Monitoring & Detection
-
-| Question | Answer | Why? | Notes |
-|----------|--------|------|-------|
-| Are authentication failures monitored? | | | |
-| Are authorization failures logged? | | | |
-| Are suspicious activities detected? | | | |
-| Are audit logs protected from tampering? | | | |
-| Are security alerts actionable? | | | |
-
----
-
-# Incident Response
-
-| Question | Answer | Why? | Notes |
-|----------|--------|------|-------|
-| Can security incidents be investigated? | | | |
-| Are forensic logs available? | | | |
-| Are incident response procedures documented? | | | |
-| Can compromised credentials be revoked quickly? | | | |
-| Are recovery procedures tested? | | | |
+| Is compute utilization reviewed regularly? | | | |
+| Are idle or oversized resources identified? | | | |
+| Is storage growth monitored? | | | |
+| Are managed services evaluated for cost, not just convenience? | | | |
 
 ---
 
 # Production Evidence
 
-## Identity
+## Scaling
 
 | Evidence | Available | Source | Notes |
 |----------|-----------|--------|-------|
-| Failed Logins | | | |
-| MFA Adoption | | | |
-| Authentication Errors | | | |
-| Token Expiration Metrics | | | |
+| Autoscaling Events | | | |
+| Instance Count Over Time | | | |
+| CPU/Memory Utilization | | | |
 
 ---
 
-## API Security
+## Reliability
 
 | Evidence | Available | Source | Notes |
 |----------|-----------|--------|-------|
-| Rate Limit Hits | | | |
-| Invalid Tokens | | | |
-| Rejected Requests | | | |
-| Security Header Validation | | | |
+| Health Check Failures | | | |
+| Pod/Instance Restarts | | | |
+| Deployment Rollback History | | | |
 
 ---
 
-## Infrastructure
+## Cost
 
 | Evidence | Available | Source | Notes |
 |----------|-----------|--------|-------|
-| Vulnerability Scan Reports | | | |
-| Container Scan Reports | | | |
-| Patch Compliance | | | |
-| Certificate Expiration Monitoring | | | |
+| Cost Dashboards | | | |
+| Idle Resource Reports | | | |
 
 ---
 
-## Monitoring
-
-| Evidence | Available | Source | Notes |
-|----------|-----------|--------|-------|
-| Security Alerts | | | |
-| SIEM Integration | | | |
-| Audit Logs | | | |
-| Threat Detection Events | | | |
-
----
-
-# Threat Readiness
-
-Evaluate the system's preparedness against common security threats.
-
-| Threat Scenario | Protected | Evidence | Notes |
-|-----------------|-----------|----------|-------|
-| Credential Theft | | | |
-| Privilege Escalation | | | |
-| SQL Injection | | | |
-| Cross-Site Scripting (XSS) | | | |
-| Cross-Site Request Forgery (CSRF) | | | |
-| Replay Attack | | | |
-| Token Theft | | | |
-| Insider Threat | | | |
-| Dependency Compromise | | | |
-| Supply Chain Attack | | | |
-
----
-
-# Security Maturity
+# Cloud Maturity
 
 | Capability | Level |
 |------------|------:|
-| Identity | |
-| Authorization | |
-| Secrets Management | |
-| Data Protection | |
-| Infrastructure Security | |
-| Monitoring & Detection | |
-| Incident Response | |
+| Statelessness | |
+| Configuration Management | |
+| Scalability | |
+| Resiliency | |
+| Infrastructure Automation | |
+| Cost Management | |
 
 ---
 
 ## Overall Maturity
 
-- ☐ Level 1 – Basic Authentication
-- ☐ Level 2 – Secure APIs
-- ☐ Level 3 – Defense in Depth
-- ☐ Level 4 – Zero Trust Architecture
-- ☐ Level 5 – Security by Design
+- ☐ Level 1 – Manual Deployments, Stateful Instances
+- ☐ Level 2 – Automated Deployments
+- ☐ Level 3 – Infrastructure as Code
+- ☐ Level 4 – Elastic, Self-Healing
+- ☐ Level 5 – Fully Cloud-Native, Cost-Optimized
 
 ---
 
-# Security Smells
+# Cloud Smells
 
 | Detected | Anti-Pattern | Impact | Evidence | Recommendation |
 |----------|--------------|--------|----------|----------------|
-| ☐ | Hardcoded Secrets | | | |
-| ☐ | Missing Authorization Checks | | | |
-| ☐ | Over-Privileged Accounts | | | |
-| ☐ | Long-Lived Tokens | | | |
-| ☐ | Disabled TLS Validation | | | |
-| ☐ | Excessive Permissions | | | |
-| ☐ | Public Administrative Endpoints | | | |
-| ☐ | Sensitive Data in Logs | | | |
-| ☐ | Missing Dependency Scanning | | | |
-| ☐ | Outdated Security Libraries | | | |
-| ☐ | Trusting Client-Side Validation | | | |
-| ☐ | Weak Password Policy | | | |
+| ☐ | Stateful Containers | | | |
+| ☐ | Manual Production Deployments | | | |
+| ☐ | Hardcoded Configuration | | | |
+| ☐ | Secrets Inside Images | | | |
+| ☐ | Single Instance Production Services | | | |
+| ☐ | Missing Health Probes | | | |
+| ☐ | No Autoscaling Strategy | | | |
+| ☐ | Ignoring Cloud Costs | | | |
 
 ---
 
 # Positive Findings
 
-Document engineering decisions that improve the overall security posture.
+Document engineering decisions that improve cloud-native maturity.
 
 Examples:
 
-- Strong identity architecture.
-- Excellent secrets management.
-- Defense in depth implemented.
-- Secure software supply chain.
-- Comprehensive monitoring and alerting.
+- Fully automated, reproducible deployments.
+- Clear separation of liveness and readiness.
+- Demonstrated graceful degradation under dependency failure.
+- Cost reviewed as part of architectural decisions.
 
 ---
 
@@ -389,23 +298,22 @@ Examples:
 
 ---
 
-# Security Compliance Score
+# Cloud Compliance Score
 
 | Area | Compliance |
 |------|-----------:|
-| Identity & Authentication | |
-| Authorization | |
-| Secrets Management | |
-| Data Protection | |
-| API Security | |
-| Infrastructure Security | |
-| Monitoring & Detection | |
+| Statelessness | |
+| Configuration Management | |
+| Scalability | |
+| Health & Resiliency | |
+| Infrastructure Automation | |
+| Cost Awareness | |
 
 ---
 
 ## Overall Compliance
 
-Security Compliance
+Cloud Compliance
 
 __________ %
 
@@ -436,10 +344,10 @@ __________ %
 | Area | Confidence | Evidence |
 |------|------------|----------|
 | Source Code | | |
-| Configuration | | |
+| Infrastructure Definitions | | |
 | Runtime Behavior | | |
 | Production Telemetry | | |
-| Security Controls | | |
+| Cost Reports | | |
 
 ---
 
@@ -455,16 +363,16 @@ __________ %
 
 # Related Engineering Rules
 
-## Security
+## Cloud
 
-- SEC-001 → SEC-010
+- CLOUD-001 → CLOUD-005
 
 ---
 
 # Related Documentation
 
 - docs/00-rule-catalog.md
-- docs/10-security.md
+- docs/11-cloud.md
 - docs/08-observability.md
 - docs/13-anti-patterns.md
 - docs/14-code-review-style.md
@@ -475,11 +383,10 @@ __________ %
 
 Provide a concise conclusion covering:
 
-- Security posture.
-- Identity and access management.
-- Data protection.
-- Operational readiness.
-- Security maturity.
+- Cloud-native maturity.
+- Scalability and resiliency.
+- Infrastructure automation.
+- Cost posture.
 - Highest-value improvements.
 
-The objective is to ensure the solution protects business assets through secure architecture, secure implementation, secure operations, and continuous monitoring.
+The objective is to ensure the solution can scale, recover, and operate cost-effectively regardless of the chosen cloud provider.
